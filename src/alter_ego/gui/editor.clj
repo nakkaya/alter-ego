@@ -1,11 +1,12 @@
 (ns alter-ego.gui.editor
-  (:use [clojure.contrib.swing-utils :only [add-action-listener]])
+  (:use [alter-ego.gui.util :only [add-action-listener]])
   (:use [alter-ego.gui.edit-node :only [edit-node]])
   (:use [alter-ego.gui.io :only [load-tree save-tree]])
-  (:import (javax.swing JScrollPane JTree)
+  (:import (javax.swing SwingUtilities JScrollPane JTree)
 	   (javax.swing.tree DefaultTreeCellRenderer DefaultMutableTreeNode)
 	   (java.awt.event MouseAdapter)
-	   (javax.swing JPopupMenu JMenu JMenuItem JFileChooser)))
+	   (javax.swing JPopupMenu JMenu JMenuItem JFileChooser))
+  (:gen-class))
 
 (defn tree-node [type name]
   (DefaultMutableTreeNode. {:type type :name name}))
@@ -140,7 +141,7 @@
       (.addMouseListener (mouse-adapter tree)))
     (JScrollPane. tree)))
 
-(defn editor []
+(defn frame []
   (let [tree (tree)] 
     (doto (javax.swing.JFrame. "Tree Editor")
       (.add tree)
@@ -148,3 +149,6 @@
       (.setSize 200 400)
       (.setLocationRelativeTo nil)
       (.setVisible true))))
+
+(defn -main [& args]
+  (SwingUtilities/invokeLater frame))

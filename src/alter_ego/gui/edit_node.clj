@@ -1,5 +1,5 @@
 (ns alter-ego.gui.edit-node
-  (:use [clojure.contrib.swing-utils :only [add-action-listener]])
+  (:use [alter-ego.gui.util :only [add-action-listener]])
   (:import (net.miginfocom.swing MigLayout)
 	   (javax.swing JPanel JLabel JTextField JButton)))
 
