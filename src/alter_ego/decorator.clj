@@ -1,8 +1,7 @@
 (ns alter-ego.decorator
   (:refer-clojure :exclude [sequence])
+  (:use [alter-ego.node-types] :reload-all)
   (:use [alter-ego.composite] :reload-all))
-
-(derive ::until-fail ::type)
 
 (defn until-fail [c]
   (with-meta {:children c} {:type ::until-fail}))

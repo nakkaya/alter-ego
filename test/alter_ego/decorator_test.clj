@@ -1,5 +1,6 @@
 (ns alter-ego.decorator-test
   (:refer-clojure :exclude [sequence])
+  (:use [alter-ego.node-types] :reload-all)
   (:use [alter-ego.composite] :reload-all)
   (:use [alter-ego.decorator] :reload-all)
   (:use [clojure.test]))

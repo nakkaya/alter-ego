@@ -1,10 +1,6 @@
 (ns alter-ego.composite
-  (:refer-clojure :exclude [sequence]))
-
-(derive ::action ::type)
-(derive ::selector ::type)
-(derive ::sequence ::type)
-(defmulti run (fn [type] ((meta type) :type)))
+  (:refer-clojure :exclude [sequence])
+  (:use [alter-ego.node-types] :reload-all))
 
 (defn action [symbol blackboard]
   (with-meta {:symbol symbol :blackboard blackboard} {:type ::action}))
