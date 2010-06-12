@@ -24,7 +24,7 @@
 
 (defmethod run ::selector [selector]
   (let [{children :children} selector]
-    (select children)))
+    (if (not (true? (select children))) false true)))
 
 (defn sequence [children]
   (with-meta {:children children} {:type ::sequence}))
@@ -32,9 +32,8 @@
 (defn- seq-run [children]
   (if-let[s (seq children)] 
     (if (run (first s))
-      (seq-run (rest s))
-      false)))
+      (seq-run (rest s)) false)))
 
 (defmethod run ::sequence [sequence]
   (let [{children :children} sequence]
-    (seq-run children)))
+    (if (not (false? (seq-run children))) true false)))

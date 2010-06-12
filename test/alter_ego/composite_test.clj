@@ -27,12 +27,20 @@
     (action 'alter-ego.composite-test/door-open? blackboard)
     (action 'alter-ego.composite-test/inc-i blackboard)]))
 
+(defn selector-tree-3 [blackboard]
+  (selector 
+   [(action 'alter-ego.composite-test/door-open? blackboard)
+    (action 'alter-ego.composite-test/inc-i blackboard)]))
+
 (deftest selector-test
   (let [blackboard (ref {:door-open true :i 0})
 	tree-1 (selector-tree-1 blackboard)
-	tree-2 (selector-tree-2 blackboard)]
+	tree-2 (selector-tree-2 blackboard)
+	blackboard2 (ref {:door-open false :i 0})
+	tree-3 (selector-tree-3 blackboard2)]
     (is (= 0  (do (run tree-1) (:i @blackboard))))
-    (is (= 1  (do (run tree-2) (:i @blackboard))))))
+    (is (= 1  (do (run tree-2) (:i @blackboard))))
+    (is (= 1  (do (run tree-3) (:i @blackboard2))))))
 
 (defn sequence-tree-1 [blackboard]
   (sequence
@@ -53,6 +61,21 @@
 	tree-2 (sequence-tree-2 blackboard2)]
     (is (= 2  (do (run tree-1) (:i @blackboard))))
     (is (= 1  (do (run tree-2) (:i @blackboard2))))))
+
+(defn small? [blackboard]
+  (if (< (:i @blackboard) 5) true false))
+
+(defn seq-return-tree [blackboard]
+  (sequence [(action 'alter-ego.composite-test/inc-i blackboard)
+	     (action 'alter-ego.composite-test/small? blackboard)]))
+
+(deftest seq-return-test
+  (let [blackboard (ref {:i 0})
+	tree-1 (seq-return-tree blackboard)
+	blackboard2 (ref {:i 10})
+	tree-2 (seq-return-tree blackboard2)]
+    (is (= true (run tree-1)))
+    (is (= false (run tree-2)))))
 
 (defn to-room [blackboard]
   (dosync (alter blackboard assoc :to-room true)))
