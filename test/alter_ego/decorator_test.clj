@@ -10,7 +10,19 @@
   (until-fail (sequence [(inc-i-action blackboard)
 			 (small?-action blackboard)])))
 
-(deftest tree-test
+(deftest until-fail-test
   (let [blackboard (ref {:i 0})
 	tree-1 (until-fail-tree blackboard)]
     (is (= 5 (do (run tree-1) (:i @blackboard))))))
+
+(defn limit-tree [blackboard]
+  (limit (sequence [(inc-i-action blackboard)
+		    (small?-action blackboard)]) 3))
+
+(deftest limit-test
+  (let [blackboard (ref {:i 6})
+	tree (limit-tree blackboard)
+	single (limit (inc-i-action blackboard) 3)]
+    (is (= 9 (do (run tree) (:i @blackboard))))
+    (is (= false (run tree)))
+    (is (= true (run single)))))

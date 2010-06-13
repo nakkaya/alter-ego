@@ -10,5 +10,6 @@
 (derive ::non-deterministic-sequence ::composite)
 
 (derive ::until-fail ::decorator)
+(derive ::limit ::decorator)
 
 (defmulti run (fn [type] ((meta type) :type)))

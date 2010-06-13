@@ -13,3 +13,18 @@
 (defmethod run ::until-fail [d]
   (let [{children :children} d]
     (run-until children)))
+
+(defn limit [c i]
+  (with-meta {:children c :times i} {:type ::limit}))
+
+(defn- run-limit [children times]
+  (if (pos? times)
+    (if-not (run children)
+      (run-limit children (dec times))
+      true)
+    false))
+
+(defmethod run ::limit [d]
+  (let [{children :children times :times} d]
+    (run-limit children times)))
+
