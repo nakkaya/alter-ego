@@ -7,7 +7,7 @@
 
 (defmethod run ::action [action]
   (let [{symbol :symbol blackboard :blackboard} action]
-    ((resolve symbol) blackboard)))
+    (boolean ((resolve symbol) blackboard))))
 
 (defn selector [children]
   (with-meta {:children children} {:type ::selector}))
