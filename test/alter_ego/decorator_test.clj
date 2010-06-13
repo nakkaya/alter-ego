@@ -27,3 +27,9 @@
     (is (= 9 (do (run tree) (:i @blackboard))))
     (is (= false (run tree)))
     (is (= true (run single)))))
+
+(deftest inverter-test
+  (let [tree-1 (inverter (small?-action (ref {:i 6})))
+	tree-2 (inverter (small?-action (ref {:i 0})))]
+    (is (= true (run tree-1)))
+    (is (= false (run tree-2)))))

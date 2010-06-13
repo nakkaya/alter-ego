@@ -11,5 +11,6 @@
 
 (derive ::until-fail ::decorator)
 (derive ::limit ::decorator)
+(derive ::inverter ::decorator)
 
 (defmulti run (fn [type] ((meta type) :type)))

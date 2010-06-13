@@ -28,3 +28,9 @@
   (let [{children :children times :times} d]
     (run-limit children times)))
 
+(defn inverter [c]
+  (with-meta {:children c} {:type ::inverter}))
+
+(defmethod run ::inverter [c]
+  (let [{children :children} c]
+    (not (run children))))
