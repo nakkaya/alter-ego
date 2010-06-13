@@ -3,19 +3,12 @@
   (:use [alter-ego.node-types] :reload-all)
   (:use [alter-ego.composite] :reload-all)
   (:use [alter-ego.decorator] :reload-all)
+  (:use [alter-ego.sample-actions] :reload-all)
   (:use [clojure.test]))
 
-(defn inc-i [blackboard]
-  (let [{i :i} @blackboard] 
-    (dosync (alter blackboard assoc :i (inc i)))))
-
-(defn small? [blackboard]
-  (if (< (:i @blackboard) 5) true false))
-
 (defn until-fail-tree [blackboard]
-  (until-fail 
-   (sequence [(action 'alter-ego.decorator-test/inc-i blackboard)
-	      (action 'alter-ego.decorator-test/small? blackboard)])))
+  (until-fail (sequence [(inc-i-action blackboard)
+			 (small?-action blackboard)])))
 
 (deftest tree-test
   (let [blackboard (ref {:i 0})

@@ -1,6 +1,7 @@
 (ns alter-ego.sample-actions
   (:refer-clojure :exclude [sequence])
-  (:use [alter-ego.composite] :reload-all))
+  (:use [alter-ego.composite] :reload-all)
+  (:use [alter-ego.decorator] :reload-all))
 
 (defn inc-i [blackboard]
   (let [{i :i} @blackboard] 
