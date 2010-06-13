@@ -13,7 +13,8 @@
 (deftest until-fail-test
   (let [blackboard (ref {:i 0})
 	tree-1 (until-fail-tree blackboard)]
-    (is (= 5 (do (run tree-1) (:i @blackboard))))))
+    (is (= 5 (do (run tree-1) (:i @blackboard))))
+    (is (= true (run tree-1)))))
 
 (defn limit-tree [blackboard]
   (limit (sequence [(inc-i-action blackboard)
