@@ -1,4 +1,5 @@
-(ns alter-ego.gui.util)
+(ns alter-ego.gui.util
+  (:import (javax.swing ImageIcon)))
 
 (defn add-action-listener
   "Adds an ActionLister to component. When the action fires, f will be
@@ -9,3 +10,9 @@
                    (actionPerformed [event] (apply f event args)))]
     (.addActionListener component listener)
     listener))
+
+(defn image-icon [file]
+  (if-let[res (ClassLoader/getSystemResource file)] 
+    (ImageIcon. res)
+    (ImageIcon. (ClassLoader/getSystemResource (str "resources/" file)))))
+

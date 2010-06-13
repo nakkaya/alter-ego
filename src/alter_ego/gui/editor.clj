@@ -1,5 +1,5 @@
 (ns alter-ego.gui.editor
-  (:use [alter-ego.gui.util :only [add-action-listener]])
+  (:use [alter-ego.gui.util :only [add-action-listener image-icon]])
   (:use [alter-ego.gui.edit-node :only [edit-node]])
   (:use [alter-ego.gui.io :only [load-tree save-tree]])
   (:import (javax.swing SwingUtilities JScrollPane JTree)
@@ -119,6 +119,12 @@
       (mousePressed [e] (if (.isPopupTrigger e) (show popup e)))
       (mouseReleased [e] (if (.isPopupTrigger e) (show popup e))))))
 
+(defn cell-icon [type]
+  (cond (= type :action) (image-icon "action.png")
+	(= type :selector) (image-icon "selector.png")
+	(= type :sequence) (image-icon "sequence.png")
+	:else (image-icon "action.png")))
+
 (defn cell-renderer []
   (proxy [DefaultTreeCellRenderer] []
     (getTreeCellRendererComponent
@@ -126,6 +132,8 @@
      (let [{type :type n :name} (.getUserObject value)]
        (.setText this (str n " (" (name type) ")"))
        (.setOpaque this true)
+       (.setIcon this (cell-icon type))
+       (.setIconTextGap this 10)
        (if selected
 	 (do (.setBackground this (java.awt.Color. 147 157 195))
 	     (.setForeground this (java.awt.Color. 255 255 247)))
@@ -136,6 +144,7 @@
 (defn tree []
   (let [tree (JTree. (tree-node :selector "Root"))]
     (doto tree
+      (.setRowHeight 30)
       (.setShowsRootHandles true)
       (.setCellRenderer (cell-renderer))
       (.addMouseListener (mouse-adapter tree)))
