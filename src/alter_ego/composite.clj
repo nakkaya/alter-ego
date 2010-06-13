@@ -2,6 +2,13 @@
   (:refer-clojure :exclude [sequence])
   (:use [alter-ego.node-types] :reload-all))
 
+(defn- shuffle
+  "Return a random permutation of coll"
+  [coll]
+  (let [l (java.util.ArrayList. coll)]
+    (java.util.Collections/shuffle l)
+    (seq l)))
+
 (defn action [symbol blackboard]
   (with-meta {:symbol symbol :blackboard blackboard} {:type ::action}))
 
@@ -22,6 +29,13 @@
   (let [{children :children} selector]
     (if (not (true? (select children))) false true)))
 
+(defn non-deterministic-selector [children]
+  (with-meta {:children children} {:type ::non-deterministic-selector}))
+
+(defmethod run ::non-deterministic-selector [selector]
+  (let [{children :children} selector]
+    (if (not (true? (select (shuffle children)))) false true)))
+
 (defn sequence [children]
   (with-meta {:children children} {:type ::sequence}))
 
@@ -33,3 +47,10 @@
 (defmethod run ::sequence [sequence]
   (let [{children :children} sequence]
     (if (not (false? (seq-run children))) true false)))
+
+(defn non-deterministic-sequence [children]
+  (with-meta {:children children} {:type ::non-deterministic-sequence}))
+
+(defmethod run ::non-deterministic-sequence [sequence]
+  (let [{children :children} sequence]
+    (if (not (false? (seq-run (shuffle children)))) true false)))

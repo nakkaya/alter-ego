@@ -36,6 +36,19 @@
     (is (= true (run single)))
     (is (= 3 (do (run tree-3) (get-i blackboard2))))))
 
+(defn non-deterministic-selector-tree [blackboard]
+  (non-deterministic-selector [(inc-i-action blackboard)
+			       (inc-i-action blackboard)]))
+
+(deftest non-deterministic-selector-test
+  (let [blackboard (ref {:i 0})
+	tree (non-deterministic-selector-tree blackboard)
+	single (non-deterministic-selector [(inc-i-action blackboard)])]
+    (is (= 1 (do (run tree) (get-i blackboard))))
+    (is (= true (run tree)))
+    (is (= 3 (do (run single) (get-i blackboard))))
+    (is (= true (run single)))))
+
 (defn sequence-tree-1 [blackboard]
   (sequence [(door-open?-action blackboard)
 	     (inc-i-action blackboard)
@@ -55,6 +68,19 @@
     (is (= 2  (do (run tree-1) (get-i blackboard))))
     (is (= 1  (do (run tree-2) (get-i blackboard2))))
     (is (= 2  (do (run single) (get-i blackboard2))))))
+
+(defn non-deterministic-sequence-tree [blackboard]
+  (non-deterministic-sequence [(inc-i-action blackboard)
+			       (inc-i-action blackboard)]))
+
+(deftest non-deterministic-sequence-test
+  (let [blackboard (ref {:i 0})
+	tree (non-deterministic-sequence-tree blackboard)
+	single (non-deterministic-sequence [(inc-i-action blackboard)])]
+    (is (= 2 (do (run tree) (get-i blackboard))))
+    (is (= true (run tree)))
+    (is (= 5 (do (run single) (get-i blackboard))))
+    (is (= true (run single)))))
 
 (defn seq-return-tree [blackboard]
   (sequence [(inc-i-action blackboard)
