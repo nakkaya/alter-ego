@@ -5,7 +5,8 @@
   (:import (javax.swing SwingUtilities JScrollPane JTree)
 	   (javax.swing.tree DefaultTreeCellRenderer DefaultMutableTreeNode)
 	   (java.awt.event MouseAdapter)
-	   (javax.swing JPopupMenu JMenu JMenuItem JFileChooser))
+	   (javax.swing JPopupMenu JMenu JMenuItem JFileChooser)
+	   (javax.swing.border LineBorder))
   (:gen-class))
 
 (defn tree-node [type name]
@@ -134,11 +135,10 @@
        (.setOpaque this true)
        (.setIcon this (cell-icon type))
        (.setIconTextGap this 10)
+       (.setBackground this java.awt.Color/white)
        (if selected
-	 (do (.setBackground this (java.awt.Color. 147 157 195))
-	     (.setForeground this (java.awt.Color. 255 255 247)))
-	 (do (.setBackground this java.awt.Color/white)
-	     (.setForeground this (java.awt.Color/black))))
+	 (.setBorder this (LineBorder. (java.awt.Color. 147 157 195) 3 true))
+	 (.setBorder this nil))
        this))))
 
 (defn tree []
