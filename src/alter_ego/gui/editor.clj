@@ -66,6 +66,9 @@
 
 (defn tree []
   (let [tree (JTree. (tree-node :selector "Root"))]
+    (.setSelectionMode 
+     (.getSelectionModel tree) 
+     javax.swing.tree.TreeSelectionModel/CONTIGUOUS_TREE_SELECTION)
     (doto tree
       (.setRowHeight 30)
       (.setShowsRootHandles true)

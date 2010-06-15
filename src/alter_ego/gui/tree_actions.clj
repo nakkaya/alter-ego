@@ -27,28 +27,42 @@
 	   (.showSaveDialog fc (.getSource event)))
       (save-tree (-> tree .getModel) (.getSelectedFile fc)))))
 
+(defn- selections [tree selections]
+  (let [model (.getModel tree)] 
+    (sort-by 
+     first
+     (reduce (fn[h v] 
+	       (let [chosen (.getLastPathComponent v)
+		     parent (.getLastPathComponent (.getParentPath v))
+		     index (.getIndexOfChild model parent chosen)]
+		 (conj h [index parent chosen])))
+	     [] selections))))
+
 (defn move-down-action [event tree]
-  (let [chosen (.getLastSelectedPathComponent tree)
-	parent (.getParent chosen)
-	model (.getModel tree)
-	i (.getIndexOfChild model parent chosen)
-	child-cnt (.getChildCount parent)
-	selected-index (.getMinSelectionRow tree)]
-    (if (< i (dec child-cnt))
-      (do (.removeNodeFromParent model chosen)
-	  (.insertNodeInto model chosen parent (inc i))
-	  (.setSelectionRow tree (inc selected-index))))))
+  (let [model (.getModel tree)
+	selections (selections tree (.getSelectionPaths tree))
+	rows (.getSelectionRows tree)
+	parent (second (first selections))
+	valid? (< (inc (first (last selections))) (.getChildCount parent))]
+
+    (if valid?
+      (do 
+    	(doseq [[index parent chosen] (reverse selections)] 
+    	  (.removeNodeFromParent model chosen)
+    	  (.insertNodeInto model chosen parent (inc index)))
+    	(.setSelectionRows tree (int-array (map inc rows)))))))
 
 (defn move-up-action [event tree]
-  (let [chosen (.getLastSelectedPathComponent tree)
-	parent (.getParent chosen)
-	model (.getModel tree)
-	i (.getIndexOfChild model parent chosen)
-	selected-index (.getMinSelectionRow tree)]
-    (if (pos? i)
-      (do (.removeNodeFromParent model chosen)
-	  (.insertNodeInto model chosen parent (dec i))
-	  (.setSelectionRow tree (dec selected-index))))))
+  (let [model (.getModel tree)
+	selections (selections tree (.getSelectionPaths tree))
+	rows (.getSelectionRows tree)
+	valid? (> (first (first selections)) 0)]
+    (if valid?
+      (do 
+	(doseq [[index parent chosen] selections] 
+	  (.removeNodeFromParent model chosen)
+	  (.insertNodeInto model chosen parent (dec index)))
+	(.setSelectionRows tree (int-array (map dec rows)))))))
 
 (defn edit-action [event tree]
   (let [chosen (.getLastSelectedPathComponent tree)]
