@@ -16,7 +16,10 @@
     (doto toolbar
       (.add (button "new.png" "New" new-action tree))
       (.add (button "open.png" "Open" open-action tree))
-      (.add (button "save.png" "Save" save-action tree)))))
+      (.add (button "save.png" "Save" save-action tree))
+      (.add (button "up-arrow.png" "Move Node Up" move-up-action tree))
+      (.add (button "down-arrow.png" "Move Node Down" move-down-action tree))
+      )))
 
 (comment 
   (defn frame []

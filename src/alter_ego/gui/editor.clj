@@ -17,8 +17,6 @@
 	sequence (JMenuItem. "Sequence")
 	action (JMenuItem. "Action")
 	edit (JMenuItem. "Edit")
-	move-up (JMenuItem. "Move Up")
-	move-down (JMenuItem. "Move down")
 	remove (JMenuItem. "Remove")]
 
     (add-action-listener selector insert-action tree :selector)
@@ -26,8 +24,6 @@
     (add-action-listener action insert-action tree :action)
     (add-action-listener remove remove-action tree)
     (add-action-listener edit edit-action tree)
-    (add-action-listener move-up move-up-action tree)
-    (add-action-listener move-down move-down-action tree)
 
     (doto insert-menu
       (.add selector)
@@ -37,9 +33,6 @@
     (doto popup
       (.add insert-menu)
       (.add edit)
-      (.addSeparator)
-      (.add move-up)
-      (.add move-down)
       (.addSeparator)
       (.add remove))))
 
