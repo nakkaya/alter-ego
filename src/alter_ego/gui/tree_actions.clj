@@ -32,19 +32,23 @@
 	parent (.getParent chosen)
 	model (.getModel tree)
 	i (.getIndexOfChild model parent chosen)
-	child-cnt (.getChildCount parent)]
+	child-cnt (.getChildCount parent)
+	selected-index (.getMinSelectionRow tree)]
     (if (< i (dec child-cnt))
       (do (.removeNodeFromParent model chosen)
-	  (.insertNodeInto model chosen parent (inc i))))))
+	  (.insertNodeInto model chosen parent (inc i))
+	  (.setSelectionRow tree (inc selected-index))))))
 
 (defn move-up-action [event tree]
   (let [chosen (.getLastSelectedPathComponent tree)
 	parent (.getParent chosen)
 	model (.getModel tree)
-	i (.getIndexOfChild model parent chosen)]
+	i (.getIndexOfChild model parent chosen)
+	selected-index (.getMinSelectionRow tree)]
     (if (pos? i)
       (do (.removeNodeFromParent model chosen)
-	  (.insertNodeInto model chosen parent (dec i))))))
+	  (.insertNodeInto model chosen parent (dec i))
+	  (.setSelectionRow tree (dec selected-index))))))
 
 (defn edit-action [event tree]
   (let [chosen (.getLastSelectedPathComponent tree)]

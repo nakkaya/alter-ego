@@ -18,13 +18,14 @@
       (.add (button "open.png" "Open" open-action tree))
       (.add (button "save.png" "Save" save-action tree)))))
 
-(defn frame []
-  (let [toolbar (toolbar nil)] 
-    (doto (javax.swing.JFrame. "Tree Editor")
-      (.add toolbar)
-      (.pack)
-      (.setLocationRelativeTo nil)
-      (.setVisible true))))
+(comment 
+  (defn frame []
+    (let [toolbar (toolbar nil)] 
+      (doto (javax.swing.JFrame. "Tree Editor")
+	(.add toolbar)
+	(.pack)
+	(.setLocationRelativeTo nil)
+	(.setVisible true))))
 
-(defn -main [& args]
-  (SwingUtilities/invokeLater frame))
+  (SwingUtilities/invokeLater frame)
+  )
