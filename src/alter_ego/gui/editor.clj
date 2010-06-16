@@ -11,30 +11,35 @@
   (:gen-class))
 
 (defn popup [tree]
-  (let [popup (JPopupMenu.)
-	insert-menu (JMenu. "Insert")
-	selector (JMenuItem. "Selector")
-	sequence (JMenuItem. "Sequence")
-	action (JMenuItem. "Action")
-	edit (JMenuItem. "Edit")
-	remove (JMenuItem. "Remove")]
-
-    (add-action-listener selector insert-action tree :selector)
-    (add-action-listener sequence insert-action tree :sequence)
-    (add-action-listener action insert-action tree :action)
-    (add-action-listener remove remove-action tree)
-    (add-action-listener edit edit-action tree)
+  (let [item (fn 
+	       ([s f tree type]
+		  (doto (JMenuItem. s)
+		    (add-action-listener f tree type)))
+	       ([s f tree]
+		    (doto (JMenuItem. s)
+		      (add-action-listener f tree))))
+	popup (JPopupMenu.)
+	insert-menu (JMenu. "Insert")]
 
     (doto insert-menu
-      (.add selector)
-      (.add sequence)
-      (.add action))
+      (.add (item "Action" insert-action tree :action))
+      (.addSeparator)
+      (.add (item "Selector" insert-action tree :selector))
+      (.add (item "Non Deterministic Selector" 
+		  insert-action tree :non-deterministic-selector))
+      (.add (item "Seqence" insert-action tree :sequence))
+      (.add (item "Non Deterministic Sequence" 
+		  insert-action tree :non-deterministic-sequence))
+      (.addSeparator)
+      (.add (item "Until Fail" insert-action tree :until-fail))
+      (.add (item "Limit" insert-action tree :limit))
+      (.add (item "Inverter" insert-action tree :inverter)))
 
     (doto popup
       (.add insert-menu)
-      (.add edit)
+      (.add (item "Edit" edit-action tree))
       (.addSeparator)
-      (.add remove))))
+      (.add (item "Remove" remove-action tree)))))
 
 (defn mouse-adapter [tree]
   (let [popup (popup tree)
@@ -46,7 +51,12 @@
 (defn cell-icon [type]
   (cond (= type :action) (image-icon "action.png")
 	(= type :selector) (image-icon "selector.png")
+	(= type :non-deterministic-selector) (image-icon "selector.png")
 	(= type :sequence) (image-icon "sequence.png")
+	(= type :non-deterministic-sequence) (image-icon "sequence.png")
+	(= type :until-fail) (image-icon "until-fail.png")
+	(= type :inverter) (image-icon "inverter.png")
+	(= type :limit) (image-icon "limit.png")
 	:else (image-icon "action.png")))
 
 (defn cell-renderer []

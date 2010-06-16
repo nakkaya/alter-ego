@@ -74,14 +74,92 @@
       (.add cancel-button "")
       (.add ok-button ""))))
 
+(defn until-fail-panel [frame tree node]
+  (let [obj (.getUserObject node)
+	name-field (JTextField. (:name obj) 15)
+	ok-button (JButton. "Ok")
+	cancel-button (JButton. "Cancel")]
+
+    (add-action-listener cancel-button (fn[_] (.setVisible frame false)))
+    (add-action-listener ok-button
+			 (fn[_]
+			   (.setUserObject 
+			    node (assoc obj :name (.getText name-field)))
+			   (-> tree .getModel (.nodeChanged node))
+			   (.setVisible frame false)))
+
+    (doto (JPanel. (MigLayout. "" "[right]"))
+      (.add (JLabel. "Edit Until Fail") "split, span, gaptop 10")
+      (.add (javax.swing.JSeparator.) "growx, wrap, gaptop 10")
+      (.add (JLabel. "Name") "gap 10")
+      (.add name-field "span, growx, wrap paragraph")
+      (.add cancel-button "")
+      (.add ok-button ""))))
+
+(defn inverter-panel [frame tree node]
+  (let [obj (.getUserObject node)
+	name-field (JTextField. (:name obj) 15)
+	ok-button (JButton. "Ok")
+	cancel-button (JButton. "Cancel")]
+
+    (add-action-listener cancel-button (fn[_] (.setVisible frame false)))
+    (add-action-listener ok-button
+			 (fn[_]
+			   (.setUserObject 
+			    node (assoc obj :name (.getText name-field)))
+			   (-> tree .getModel (.nodeChanged node))
+			   (.setVisible frame false)))
+
+    (doto (JPanel. (MigLayout. "" "[right]"))
+      (.add (JLabel. "Edit Inverter") "split, span, gaptop 10")
+      (.add (javax.swing.JSeparator.) "growx, wrap, gaptop 10")
+      (.add (JLabel. "Name") "gap 10")
+      (.add name-field "span, growx, wrap paragraph")
+      (.add cancel-button "")
+      (.add ok-button ""))))
+
+(defn limit-panel [frame tree node]
+  (let [obj (.getUserObject node)
+	name-field (JTextField. (:name obj) 15)
+	times-field (JTextField. (:times obj) 15)
+	ok-button (JButton. "Ok")
+	cancel-button (JButton. "Cancel")]
+
+    (add-action-listener cancel-button (fn[_] (.setVisible frame false)))
+    (add-action-listener ok-button
+			 (fn[_]
+			   (.setUserObject 
+			    node (assoc obj 
+				   :name (.getText name-field)
+				   :times (.getText times-field)))
+			   (-> tree .getModel (.nodeChanged node))
+			   (.setVisible frame false)))
+
+    (doto (JPanel. (MigLayout. "" "[right]"))
+      (.add (JLabel. "Edit Action") "split, span, gaptop 10")
+      (.add (javax.swing.JSeparator.) "growx, wrap, gaptop 10")
+      (.add (JLabel. "Name") "gap 10")
+      (.add name-field "span, growx")
+      (.add (JLabel. "Times") "gap 10")
+      (.add times-field "span, growx, wrap paragraph")
+      (.add cancel-button "")
+      (.add ok-button ""))))
+
 (defn edit-node [tree node]
   (let [{type :type} (.getUserObject node)
 	frame (javax.swing.JFrame. "Edit Node")]
     (doto frame
       (.add
        (cond (= type :selector) (selector-panel frame tree node)
+	     (= type :non-deterministic-selector) 
+	     (selector-panel frame tree node)
 	     (= type :sequence) (sequence-panel frame tree node)
-	     (= type :action) (action-panel frame tree node)))
+	     (= type :non-deterministic-sequence) 
+	     (sequence-panel frame tree node)
+	     (= type :action) (action-panel frame tree node)
+	     (= type :until-fail) (until-fail-panel frame tree node)
+	     (= type :limit) (limit-panel frame tree node)
+	     (= type :inverter) (inverter-panel frame tree node)))
       (.pack))))
 
 (comment
