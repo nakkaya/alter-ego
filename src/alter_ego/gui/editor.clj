@@ -81,7 +81,7 @@
 	tree (tree node)
 	toolbar (toolbar tree)
 	meta (meta (.getUserObject node))
-	title (if (nil? meta) "Tree Editor" (.getName (:file meta)))]
+	title (if (nil? meta) "scratch" (.getName (:file meta)))]
     (doto panel
       (.add toolbar "wrap")
       (.add (JScrollPane. tree) "grow"))

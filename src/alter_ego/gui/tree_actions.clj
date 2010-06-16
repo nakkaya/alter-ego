@@ -11,6 +11,18 @@
 (defn- frame [node source]
   ((resolve 'alter-ego.gui.editor/frame) node source))
 
+(defn- tree-modified [tree]
+  (let [frame (SwingUtilities/getRoot tree)
+	title (.getTitle frame)]
+    (if-not (= (take 2 title) '(\* \*))
+      (.setTitle frame (str "** " title)))))
+
+(defn- tree-saved [tree]
+  (let [frame (SwingUtilities/getRoot tree)
+	title (.getTitle frame)]
+    (if (= (take 2 title) '(\* \*))
+      (.setTitle frame (apply str (drop 3 title))))))
+
 (defn new-action [event tree]
   (frame (tree-node :selector "Root") (.getSource event)))
 
@@ -30,7 +42,8 @@
 	(if (= JFileChooser/APPROVE_OPTION 
 	       (.showSaveDialog fc (.getSource event)))
 	  (save-tree model (.getSelectedFile fc))))
-      (save-tree model (:file meta)))))
+      (save-tree model (:file meta))))
+    (tree-saved tree))
 
 (defn- selections [tree selections]
   (let [model (.getModel tree)] 
@@ -55,7 +68,8 @@
     	(doseq [[index parent chosen] (reverse selections)] 
     	  (.removeNodeFromParent model chosen)
     	  (.insertNodeInto model chosen parent (inc index)))
-    	(.setSelectionRows tree (int-array (map inc rows)))))))
+    	(.setSelectionRows tree (int-array (map inc rows)))
+	(tree-modified tree)))))
 
 (defn move-up-action [event tree]
   (let [model (.getModel tree)
@@ -67,14 +81,16 @@
 	(doseq [[index parent chosen] selections] 
 	  (.removeNodeFromParent model chosen)
 	  (.insertNodeInto model chosen parent (dec index)))
-	(.setSelectionRows tree (int-array (map dec rows)))))))
+	(.setSelectionRows tree (int-array (map dec rows)))
+	(tree-modified tree)))))
 
 (defn edit-action [event tree]
   (let [chosen (.getLastSelectedPathComponent tree)]
     (if-not (nil? chosen)
       (doto (edit-node tree chosen)
 	(.setLocationRelativeTo tree)
-	(.setVisible true)))))
+	(.setVisible true)))
+    (tree-modified tree)))
 
 
 (defn insert-action [event tree type]
@@ -82,9 +98,11 @@
 	child-cnt (.getChildCount chosen)
 	child (tree-node type "new")]
     (if-not (nil? chosen)
-      (-> tree .getModel (.insertNodeInto child chosen child-cnt)))))
+      (-> tree .getModel (.insertNodeInto child chosen child-cnt)))
+    (tree-modified tree)))
 
 (defn remove-action [event tree]
   (let [chosen (.getLastSelectedPathComponent tree)]
     (if-not (nil? chosen)
-      (-> tree .getModel (.removeNodeFromParent chosen)))))
+      (-> tree .getModel (.removeNodeFromParent chosen)))
+    (tree-modified tree)))
