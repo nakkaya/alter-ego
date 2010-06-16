@@ -23,10 +23,14 @@
 	 (load-tree file) (.getSource event) fname)))))
 
 (defn save-action [event tree]
-  (let [fc (JFileChooser.)] 
-    (if (= JFileChooser/APPROVE_OPTION 
-	   (.showSaveDialog fc (.getSource event)))
-      (save-tree (-> tree .getModel) (.getSelectedFile fc)))))
+  (let [model (-> tree .getModel)
+	meta (meta (-> model .getRoot .getUserObject))]
+    (if (nil? meta)
+      (let [fc (JFileChooser.)] 
+	(if (= JFileChooser/APPROVE_OPTION 
+	       (.showSaveDialog fc (.getSource event)))
+	  (save-tree model (.getSelectedFile fc))))
+      (save-tree model (:file meta)))))
 
 (defn- selections [tree selections]
   (let [model (.getModel tree)] 

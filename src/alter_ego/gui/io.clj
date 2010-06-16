@@ -14,8 +14,9 @@
 
 (defn load-tree 
   ([file]
-     (let [tree (read-string (slurp (.getPath file)))] 
-       (load-tree (DefaultMutableTreeNode. (first tree)) (rest tree))))
+     (let [tree (read-string (slurp (.getPath file)))
+	   root (with-meta (first tree) {:file file})] 
+       (load-tree (DefaultMutableTreeNode. root) (rest tree))))
   ([parent children]
      (doall 
       (map #(if (> (count %) 1)
