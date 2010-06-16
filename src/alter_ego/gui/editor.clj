@@ -75,17 +75,19 @@
       (.setCellRenderer (cell-renderer))
       (.addMouseListener (mouse-adapter tree)))))
 
-(defn frame [node & source]
-  (let [panel (JPanel. (MigLayout. "fill,insets 0 0 0 0"))
+(defn frame [node & args]
+  (let [[parent-component title] args
+	panel (JPanel. (MigLayout. "fill,insets 0 0 0 0"))
 	tree (tree node)
-	toolbar (toolbar tree)]
+	toolbar (toolbar tree)
+	title (if (nil? title) "Tree Editor" title)]
     (doto panel
       (.add toolbar "wrap")
       (.add (JScrollPane. tree) "grow"))
-    (doto (javax.swing.JFrame. "Tree Editor")
+    (doto (javax.swing.JFrame. title)
       (.add panel)
       (.pack)
-      (.setLocationRelativeTo (first source))
+      (.setLocationRelativeTo parent-component)
       (.setVisible true))))
 
 (defn -main [& args]
