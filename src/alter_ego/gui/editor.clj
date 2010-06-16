@@ -64,8 +64,8 @@
 	 (.setBorder this nil))
        this))))
 
-(defn tree []
-  (let [tree (JTree. (tree-node :selector "Root"))]
+(defn tree [node]
+  (let [tree (JTree. node)]
     (.setSelectionMode 
      (.getSelectionModel tree) 
      javax.swing.tree.TreeSelectionModel/CONTIGUOUS_TREE_SELECTION)
@@ -75,18 +75,19 @@
       (.setCellRenderer (cell-renderer))
       (.addMouseListener (mouse-adapter tree)))))
 
-(defn frame []
+(defn frame [node & source]
   (let [panel (JPanel. (MigLayout. "fill,insets 0 0 0 0"))
-	tree (tree)
-	toolbar (toolbar tree)] 
+	tree (tree node)
+	toolbar (toolbar tree)]
     (doto panel
       (.add toolbar "wrap")
       (.add (JScrollPane. tree) "grow"))
     (doto (javax.swing.JFrame. "Tree Editor")
       (.add panel)
       (.pack)
-      (.setLocationRelativeTo nil)
+      (.setLocationRelativeTo (first source))
       (.setVisible true))))
 
 (defn -main [& args]
-  (SwingUtilities/invokeLater frame))
+  (let [frame #(frame (tree-node :selector "Root"))] 
+    (SwingUtilities/invokeLater frame)))

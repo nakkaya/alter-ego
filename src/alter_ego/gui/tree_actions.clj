@@ -9,17 +9,16 @@
   (DefaultMutableTreeNode. {:type type :name name}))
 
 (defn new-action [event tree]
-  (-> tree .getModel 
-      (.setRoot 
-       (DefaultMutableTreeNode. {:type :selector :name "Root"}))))
+  (alter-ego.gui.editor/frame 
+   (tree-node :selector "Root") (.getSource event)))
 
 (defn open-action [event tree]
   (let [fc (JFileChooser.)] 
     (.setFileSelectionMode fc JFileChooser/FILES_ONLY)
     (if (= JFileChooser/APPROVE_OPTION 
 	   (.showOpenDialog fc (.getSource event)))
-      (-> tree .getModel 
-	  (.setRoot (load-tree (.getSelectedFile fc)))))))
+      (alter-ego.gui.editor/frame 
+       (load-tree (.getSelectedFile fc)) (.getSource event)))))
 
 (defn save-action [event tree]
   (let [fc (JFileChooser.)] 
