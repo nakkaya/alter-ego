@@ -85,7 +85,6 @@
     (doto (javax.swing.JFrame. "Tree Editor")
       (.add panel)
       (.pack)
-      (.setSize 200 400)
       (.setLocationRelativeTo nil)
       (.setVisible true))))
 
