@@ -8,9 +8,11 @@
 (defn tree-node [type name]
   (DefaultMutableTreeNode. {:type type :name name}))
 
+(defn- frame [node source]
+  ((resolve 'alter-ego.gui.editor/frame) node source))
+
 (defn new-action [event tree]
-  (alter-ego.gui.editor/frame 
-   (tree-node :selector "Root") (.getSource event)))
+  (frame (tree-node :selector "Root") (.getSource event)))
 
 (defn open-action [event tree]
   (let [fc (JFileChooser.)] 
@@ -18,7 +20,7 @@
     (if (= JFileChooser/APPROVE_OPTION 
 	   (.showOpenDialog fc (.getSource event)))
       (let [file (.getSelectedFile fc)]
-	(alter-ego.gui.editor/frame (load-tree file) (.getSource event))))))
+	(frame (load-tree file) (.getSource event))))))
 
 (defn save-action [event tree]
   (let [model (-> tree .getModel)
