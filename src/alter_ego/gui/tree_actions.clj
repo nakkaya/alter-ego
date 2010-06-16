@@ -17,10 +17,8 @@
     (.setFileSelectionMode fc JFileChooser/FILES_ONLY)
     (if (= JFileChooser/APPROVE_OPTION 
 	   (.showOpenDialog fc (.getSource event)))
-      (let [file (.getSelectedFile fc)
-	    fname (.getName file)]
-	(alter-ego.gui.editor/frame 
-	 (load-tree file) (.getSource event) fname)))))
+      (let [file (.getSelectedFile fc)]
+	(alter-ego.gui.editor/frame (load-tree file) (.getSource event))))))
 
 (defn save-action [event tree]
   (let [model (-> tree .getModel)

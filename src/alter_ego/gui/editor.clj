@@ -76,11 +76,12 @@
       (.addMouseListener (mouse-adapter tree)))))
 
 (defn frame [node & args]
-  (let [[parent-component title] args
+  (let [[parent-component] args
 	panel (JPanel. (MigLayout. "fill,insets 0 0 0 0"))
 	tree (tree node)
 	toolbar (toolbar tree)
-	title (if (nil? title) "Tree Editor" title)]
+	meta (meta (.getUserObject node))
+	title (if (nil? meta) "Tree Editor" (.getName (:file meta)))]
     (doto panel
       (.add toolbar "wrap")
       (.add (JScrollPane. tree) "grow"))
