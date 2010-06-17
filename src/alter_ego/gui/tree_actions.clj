@@ -34,22 +34,27 @@
       (let [file (.getSelectedFile fc)]
 	(frame (load-tree file) (.getSource event))))))
 
+(defn save-as-action [event tree]
+  (let [fc (JFileChooser.)] 
+    (if (= JFileChooser/APPROVE_OPTION 
+	   (.showSaveDialog fc (.getSource event)))
+      (let [file (.getSelectedFile fc)
+	    frame (SwingUtilities/getRoot tree)
+	    model (-> tree .getModel)
+	    obj (-> model .getRoot .getUserObject)
+	    with-meta (with-meta obj {:file file})]
+	(save-tree model file)
+	(-> model .getRoot (.setUserObject with-meta))
+	(.setTitle frame (.getName file))))))
+
 (defn save-action [event tree]
   (let [model (-> tree .getModel)
 	meta (meta (-> model .getRoot .getUserObject))]
     (if (nil? meta)
-      (let [fc (JFileChooser.)] 
-	(if (= JFileChooser/APPROVE_OPTION 
-	       (.showSaveDialog fc (.getSource event)))
-	  (let [file (.getSelectedFile fc)
-		frame (SwingUtilities/getRoot tree)
-		obj (-> model .getRoot .getUserObject)
-		with-meta (with-meta obj {:file file})]
-	    (save-tree model file)
-	    (-> model .getRoot (.setUserObject with-meta))
-	    (.setTitle frame (.getName file)))))
-      (save-tree model (:file meta))))
-    (tree-saved tree))
+      (save-as-action event tree)
+      (do 
+	(save-tree model (:file meta))
+	(tree-saved tree)))))
 
 (defn- selections [tree selections]
   (let [model (.getModel tree)] 
