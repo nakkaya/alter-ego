@@ -14,3 +14,5 @@
 (derive ::inverter ::decorator)
 
 (defmulti run (fn [type] ((meta type) :type)))
+(defmulti append-child (fn [parent child] [((meta parent) :type) 
+					   ((meta child) :type)]))

@@ -11,11 +11,13 @@
 	  (= type :action) (action (symbol func) blackboard)
 	  (= type :until-fail) (until-fail nil))))
 
-(defn- add-child [p c]
-  (let [{children :children} p]
-    (if (isa? (until-fail nil) p)
-      (until-fail c)
-      (assoc p :children (conj children c)))))
+(defmethod append-child [:alter-ego.node-types/composite 
+			 :alter-ego.node-types/type] [p c] 
+  (assoc p :children (conj (:children p) c)))
+
+(defmethod append-child [:alter-ego.node-types/decorator
+			 :alter-ego.node-types/type] [p c] 
+  (assoc p :children c))
 
 (defn load-tree 
   ([file]
@@ -28,6 +30,6 @@
 	       (if (> (count v) 1)
 		 (let [p (node (first v) blackboard)
 		       c (rest v)] 
-		   (add-child h (load-tree p c blackboard)))
-		 (add-child h (node (first v) blackboard)))) 
+		   (append-child h (load-tree p c blackboard)))
+		 (append-child h (node (first v) blackboard)))) 
 	     parent children)))
