@@ -4,18 +4,18 @@
   (:use [alter-ego.composite] :reload-all))
 
 (defn until-fail [c]
-  (with-meta {:children c} {:type ::until-fail}))
+  (with-meta {:children c} {:type :alter-ego.node-types/until-fail}))
 
 (defn- run-until [children]
   (if (run children)
     (run-until children) true))
 
-(defmethod run ::until-fail [d]
+(defmethod run :alter-ego.node-types/until-fail [d]
   (let [{children :children} d]
     (run-until children)))
 
 (defn limit [c i]
-  (with-meta {:children c :times i} {:type ::limit}))
+  (with-meta {:children c :times i} {:type :alter-ego.node-types/limit}))
 
 (defn- run-limit [children times]
   (if (pos? times)
@@ -24,13 +24,13 @@
       true)
     false))
 
-(defmethod run ::limit [d]
+(defmethod run :alter-ego.node-types/limit [d]
   (let [{children :children times :times} d]
     (run-limit children times)))
 
 (defn inverter [c]
-  (with-meta {:children c} {:type ::inverter}))
+  (with-meta {:children c} {:type :alter-ego.node-types/inverter}))
 
-(defmethod run ::inverter [c]
+(defmethod run :alter-ego.node-types/inverter [c]
   (let [{children :children} c]
     (not (run children))))
