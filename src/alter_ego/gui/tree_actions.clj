@@ -3,7 +3,7 @@
   (:use [alter-ego.gui.io :only [load-tree save-tree]])
   (:use [alter-ego.gui.edit-node :only [edit-node]])
   (:import (javax.swing SwingUtilities JPanel JButton JFileChooser)
-	   (javax.swing.tree DefaultMutableTreeNode)))
+	   (javax.swing.tree DefaultMutableTreeNode TreePath)))
 
 (defn tree-node [type name]
   (DefaultMutableTreeNode. {:type type :name name}))
@@ -106,3 +106,10 @@
     (if-not (nil? chosen)
       (-> tree .getModel (.removeNodeFromParent chosen)))
     (tree-modified tree)))
+
+(defn expand-tree-action [event tree]
+  (loop [row 0 total 1]
+    (if-not (> row total)
+      (do 
+	(.expandRow tree row)
+	(recur (inc row) (.getRowCount tree))))))
