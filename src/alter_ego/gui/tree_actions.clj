@@ -41,7 +41,13 @@
       (let [fc (JFileChooser.)] 
 	(if (= JFileChooser/APPROVE_OPTION 
 	       (.showSaveDialog fc (.getSource event)))
-	  (save-tree model (.getSelectedFile fc))))
+	  (let [file (.getSelectedFile fc)
+		frame (SwingUtilities/getRoot tree)
+		obj (-> model .getRoot .getUserObject)
+		with-meta (with-meta obj {:file file})]
+	    (save-tree model file)
+	    (-> model .getRoot (.setUserObject with-meta))
+	    (.setTitle frame (.getName file)))))
       (save-tree model (:file meta))))
     (tree-saved tree))
 
