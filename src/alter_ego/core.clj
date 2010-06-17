@@ -5,11 +5,15 @@
   (:use [alter-ego.decorator] :reload-all))
 
 (defn- node [n blackboard]
-  (let [{type :type func :action} n]
-    (cond (= type :selector) (selector [])
-	  (= type :sequence) (sequence [])
-	  (= type :action) (action (symbol func) blackboard)
-	  (= type :until-fail) (until-fail nil))))
+  (let [{t :type func :action} n]
+    (cond (= t :action) (action (symbol func) blackboard)
+	  (= t :selector) (selector [])
+	  (= t :non-deterministic-selector) (non-deterministic-selector [])
+	  (= t :sequence) (sequence [])
+	  (= t :non-deterministic-sequence) (non-deterministic-sequence [])
+	  (= t :until-fail) (until-fail nil)
+	  (= t :limit) (limit nil)
+	  (= t :inverter) (inverter nil))))
 
 (defmethod append-child [:alter-ego.node-types/composite 
 			 :alter-ego.node-types/type] [p c] 
