@@ -13,13 +13,13 @@
 (def sample-tree
      [{:type :selector, :name "Root"}
       [{:type :sequence, :name "Open Door"}
-       [{:type :action, :name "Door Open?", :action 'door-open?}]
-       [{:type :action, :name "Move", :action 'move}]]
+       [{:type :action, :name "Door Open?", :function 'door-open?}]
+       [{:type :action, :name "Move", :function 'move}]]
       [{:type :sequence, :name "Closed Door"}
-       [{:type :action, :name "Move", :action 'move}]
-       [{:type :action, :name "Open Door", :action 'open}]
+       [{:type :action, :name "Move", :function 'move}]
+       [{:type :action, :name "Open Door", :function 'open}]
        [{:type :until-fail, :name "Until Fail"}
-	[{:type :action, :name "Move", :action 'move}]]]])
+	[{:type :action, :name "Move", :function 'move}]]]])
 
 (with-private-fns [alter-ego.core [node]]
   (deftest load-test
