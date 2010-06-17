@@ -12,7 +12,7 @@
     (add-action-listener f args)))
 
 (defn toolbar [tree]
-  (let [toolbar (JPanel. (MigLayout. "insets 5 0 5 0"))]
+  (let [toolbar (JPanel. (MigLayout. "insets 0 0 0 0"))]
     (doto toolbar
       (.add (button "new.png" "New" new-action tree))
       (.add (button "open.png" "Open" open-action tree))
