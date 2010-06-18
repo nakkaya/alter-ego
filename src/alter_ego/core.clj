@@ -39,3 +39,6 @@
 		   (append-child h (load-tree p c blackboard)))
 		 (append-child h (node (first v) blackboard)))) 
 	     parent children)))
+
+(defn exec [t]
+  (run t))
