@@ -124,3 +124,31 @@
       (do 
 	(.expandRow tree row)
 	(recur (inc row) (.getRowCount tree))))))
+
+(defn paste-action [event tree ccp]
+  (let [chosen (.getLastSelectedPathComponent tree)]
+    (if-not (and (nil? chosen)
+		 (not (empty? @ccp)))
+      (let [nodes (first @ccp)] 
+	(doseq [[_ _ node] nodes] 
+	  (-> tree .getModel (.insertNodeInto node chosen 0))
+	  (dosync (ref-set ccp (rest @ccp))))
+	(tree-modified tree)))))
+
+(defn cut-action [event tree ccp]
+  (let [selections (selections tree (.getSelectionPaths tree))] 
+    (if-not (empty? selections)
+      (do 
+	(doseq [[index parent chosen] selections]
+	  (-> tree .getModel (.removeNodeFromParent chosen)))
+	(dosync (alter ccp conj selections))
+	(tree-modified tree)))))
+
+(defn copy-action [event tree ccp]
+  (let [selections (selections tree (.getSelectionPaths tree))] 
+    (if-not (empty? selections)
+      (dosync (alter ccp conj 
+		     (map #(let [[_ _ chosen] %] 
+			     [-1 -1 (DefaultMutableTreeNode. 
+				      (.getUserObject chosen))])
+			  selections))))))

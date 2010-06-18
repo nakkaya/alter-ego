@@ -88,8 +88,9 @@
 (defn frame [node & args]
   (let [[parent-component] args
 	panel (JPanel. (MigLayout. "fill,insets 0 0 0 0"))
+	ccp (ref [])
 	tree (tree node)
-	toolbar (toolbar tree)
+	toolbar (toolbar tree ccp)
 	meta (meta (.getUserObject node))
 	title (if (nil? meta) "scratch" (.getName (:file meta)))]
     (doto panel
