@@ -42,3 +42,10 @@
 
 (defn exec [t]
   (run t))
+
+(defmacro from-blackboard [blackboard bindings & body]
+  `(let [~@(interleave bindings
+		       (map cons 
+			    (map keyword bindings)
+			    (repeat (list (list 'deref `~blackboard)))))]
+     ~@body))

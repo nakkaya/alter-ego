@@ -34,3 +34,10 @@
 	     (:symbol (first (:children (second (:children tree)))))))
       (is (= 'open
 	     (:symbol (second (:children (second (:children tree))))))))))
+
+(deftest from-blackboard-test
+  (let [blackboard (ref {:key1 :val1 :key2 99 :target [3 4]})] 
+    (is (= :val1  (from-blackboard blackboard [key1] key1)))
+    (is (= 99  (from-blackboard blackboard [key2] key2)))
+    (is (= [99 [3  4]]  
+	   (from-blackboard blackboard [key2 target] [key2 target])))))
