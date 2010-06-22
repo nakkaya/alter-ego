@@ -1,7 +1,8 @@
 (ns #^{:author "Nurullah Akkaya"
        :skip-wiki true}
   alter-ego.gui.editor
-  (:use [alter-ego.gui.util :only [add-action-listener image-icon]])
+  (:use [alter-ego.gui.util :only [add-action-listener 
+				   add-key-typed-listener image-icon]])
   (:use [alter-ego.gui.toolbar :only [toolbar]] :reload-all)
   (:use [alter-ego.gui.tree-actions] :reload-all)
   (:import (javax.swing SwingUtilities JScrollPane JTree JPanel)
@@ -98,6 +99,18 @@
       (.addMouseListener (mouse-adapter tree))
       (.setSelectionRow 0))))
 
+(defn key-bindings [event tree ccp]
+  (let [modifier (.getModifiers event)
+	key (.getKeyChar event)] 
+    (when (= 4 modifier) ;;alt pressed
+      (cond (= key \n) (new-action event tree)
+	    (= key \o) (open-action event tree)
+	    (= key \s) (save-action event tree)
+	    (= key \e) (edit-action event tree)
+	    (= key \v) (paste-action event tree ccp)
+	    (= key \x) (cut-action event tree ccp)
+	    (= key \c) (copy-action event tree ccp)))))
+
 (defn frame [node & args]
   (let [[parent-component] args
 	panel (JPanel. (MigLayout. "fill,insets 0 0 0 0"))
@@ -106,6 +119,7 @@
 	toolbar (toolbar tree ccp)
 	meta (meta (.getUserObject node))
 	title (if (nil? meta) "scratch" (.getName (:file meta)))]
+    (add-key-typed-listener tree key-bindings tree ccp)
     (doto panel
       (.add toolbar "wrap")
       (.add (JScrollPane. tree) "grow"))
