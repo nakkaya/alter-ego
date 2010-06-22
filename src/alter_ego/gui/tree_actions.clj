@@ -1,4 +1,6 @@
-(ns alter-ego.gui.tree-actions
+(ns #^{:author "Nurullah Akkaya"
+       :skip-wiki true}
+  alter-ego.gui.tree-actions
   (:use [alter-ego.gui.util :only [add-action-listener image-icon]])
   (:use [alter-ego.gui.io :only [load-tree save-tree]])
   (:use [alter-ego.gui.edit-node :only [edit-node]])

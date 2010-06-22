@@ -1,4 +1,6 @@
-(ns alter-ego.gui.util
+(ns #^{:author "Nurullah Akkaya"
+       :skip-wiki true}
+  alter-ego.gui.util
   (:import (javax.swing ImageIcon)))
 
 (defn add-action-listener

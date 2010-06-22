@@ -1,4 +1,6 @@
-(ns alter-ego.gui.editor
+(ns #^{:author "Nurullah Akkaya"
+       :skip-wiki true}
+  alter-ego.gui.editor
   (:use [alter-ego.gui.util :only [add-action-listener image-icon]])
   (:use [alter-ego.gui.toolbar :only [toolbar]] :reload-all)
   (:use [alter-ego.gui.tree-actions] :reload-all)

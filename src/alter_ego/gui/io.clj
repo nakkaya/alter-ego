@@ -1,4 +1,6 @@
-(ns alter-ego.gui.io
+(ns #^{:author "Nurullah Akkaya"
+       :skip-wiki true}
+  alter-ego.gui.io
   (:import (javax.swing.tree DefaultTreeModel DefaultMutableTreeNode)))
 
 

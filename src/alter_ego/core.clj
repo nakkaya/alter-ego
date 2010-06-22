@@ -1,4 +1,5 @@
-(ns alter-ego.core
+(ns #^{:author "Nurullah Akkaya"}
+  alter-ego.core
   (:refer-clojure :exclude [sequence])
   (:use [alter-ego.node-types] :reload-all)
   (:use [alter-ego.composite] :reload-all)
@@ -26,6 +27,7 @@
   (assoc p :children c))
 
 (defn load-tree 
+  "Load tree definition."
   ([file]
      (load-tree file (ref {})))
   ([file blackboard]
@@ -43,7 +45,9 @@
 (defn exec [t]
   (run t))
 
-(defmacro from-blackboard [blackboard bindings & body]
+(defmacro from-blackboard 
+  "A convenience macro to lookup bindings in the given blackboard."
+  [blackboard bindings & body]
   `(let [~@(interleave bindings
 		       (map cons 
 			    (map keyword bindings)

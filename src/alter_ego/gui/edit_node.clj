@@ -1,4 +1,6 @@
-(ns alter-ego.gui.edit-node
+(ns #^{:author "Nurullah Akkaya"
+       :skip-wiki true}
+  alter-ego.gui.edit-node
   (:use [alter-ego.gui.util :only [add-action-listener]])
   (:import (net.miginfocom.swing MigLayout)
 	   (javax.swing JPanel JLabel JTextField JButton)))

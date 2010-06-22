@@ -1,4 +1,6 @@
-(ns alter-ego.gui.toolbar
+(ns #^{:author "Nurullah Akkaya"
+       :skip-wiki true}
+  alter-ego.gui.toolbar
   (:use [alter-ego.gui.util :only [add-action-listener image-icon]])
   (:use [alter-ego.gui.tree-actions])
   (:import (javax.swing SwingUtilities JPanel JButton)

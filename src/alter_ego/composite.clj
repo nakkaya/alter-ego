@@ -1,4 +1,5 @@
-(ns alter-ego.composite
+(ns #^{:author "Nurullah Akkaya"}
+  alter-ego.composite
   (:refer-clojure :exclude [sequence])
   (:use [alter-ego.node-types] :reload-all))
 
@@ -9,7 +10,9 @@
     (java.util.Collections/shuffle l)
     (seq l)))
 
-(defn action [symbol blackboard]
+(defn action 
+  "This node wraps a function call with blackboard as its argument."
+  [symbol blackboard]
   (with-meta {:symbol symbol :blackboard blackboard} 
     {:type :alter-ego.node-types/action}))
 
@@ -17,7 +20,10 @@
   (let [{symbol :symbol blackboard :blackboard} action]
     (boolean ((resolve symbol) blackboard))))
 
-(defn selector [children]
+(defn selector 
+  "Tries to run all its children in sequence as soon as one succeeds 
+   it also succeeds."
+  [children]
   (with-meta {:children children} {:type :alter-ego.node-types/selector}))
 
 (defn- select [children]
@@ -30,7 +36,9 @@
   (let [{children :children} selector]
     (if (not (true? (select children))) false true)))
 
-(defn non-deterministic-selector [children]
+(defn non-deterministic-selector 
+  "Same as selector, but shuffles all its children prior to execution."
+  [children]
   (with-meta {:children children} 
     {:type :alter-ego.node-types/non-deterministic-selector}))
 
@@ -38,7 +46,10 @@
   (let [{children :children} selector]
     (if (not (true? (select (shuffle children)))) false true)))
 
-(defn sequence [children]
+(defn sequence 
+  "Runs all of its children in sequential order. If one of them fails, 
+   it also fails. Once all of them succeeds, it also succeeds."
+  [children]
   (with-meta {:children children} {:type :alter-ego.node-types/sequence}))
 
 (defn- seq-run [children]
@@ -50,7 +61,9 @@
   (let [{children :children} sequence]
     (if (not (false? (seq-run children))) true false)))
 
-(defn non-deterministic-sequence [children]
+(defn non-deterministic-sequence 
+  "Same as sequence, but shuffles all its children prior to execution."
+  [children]
   (with-meta {:children children} 
     {:type :alter-ego.node-types/non-deterministic-sequence}))
 
