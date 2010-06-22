@@ -172,4 +172,4 @@
 	      {:type :action :name "some"}))
 
   (.setVisible (edit-node atree anode) true)
-)
+  )
