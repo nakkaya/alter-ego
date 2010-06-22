@@ -13,7 +13,9 @@
   (:gen-class))
 
 (defn popup [tree]
-  (let [item (fn 
+  (let [chosen (.getLastSelectedPathComponent tree)
+	{status :status} (.getUserObject chosen)
+	item (fn 
 	       ([s f tree type]
 		  (doto (JMenuItem. s)
 		    (add-action-listener f tree type)))
@@ -41,17 +43,22 @@
       (.add insert-menu)
       (.add (item "Edit" edit-action tree))
       (.addSeparator)
+      (.add (if (or (nil? status)
+      		    (= :disable status))
+      	      (item "Disable" disable-node-action tree)
+      	      (item "Enable" enable-node-action tree)))
       (.add (item "Remove" remove-action tree)))))
 
 (defn mouse-adapter [tree]
-  (let [popup (popup tree)
-	show #(.show %1 (.getComponent %2) (.getX %2) (.getY %2))] 
+  (let [show #(.show (popup tree) (.getComponent %1) (.getX %1) (.getY %1))] 
     (proxy [MouseAdapter] []
-      (mousePressed [e] (if (.isPopupTrigger e) (show popup e)))
-      (mouseReleased [e] (if (.isPopupTrigger e) (show popup e))))))
+      (mousePressed [e] (if (.isPopupTrigger e) (show e)))
+      (mouseReleased [e] (if (.isPopupTrigger e) (show e))))))
 
-(defn cell-icon [type]
-  (cond (= type :action) (image-icon "action.png")
+(defn cell-icon [type status]
+  (cond (and (not (nil? status))
+	     (= status :disabled)) (image-icon "disabled.png")
+	(= type :action) (image-icon "action.png")
 	(= type :selector) (image-icon "selector.png")
 	(= type :non-deterministic-selector) (image-icon "selector.png")
 	(= type :sequence) (image-icon "sequence.png")
@@ -65,10 +72,13 @@
   (proxy [DefaultTreeCellRenderer] []
     (getTreeCellRendererComponent
      [tree value selected expanded leaf row has-focus?]
-     (let [{type :type n :name} (.getUserObject value)]
-       (.setText this (str n " (" (name type) ")"))
+     (let [{type :type n :name status :status} (.getUserObject value)]
+       (if (and (not (nil? status))
+		(= status :disabled))
+	 (.setText this (str n " (" (name status) "/" (name type) ")"))
+	 (.setText this (str n " (" (name type) ")")))
        (.setOpaque this true)
-       (.setIcon this (cell-icon type))
+       (.setIcon this (cell-icon type status))
        (.setIconTextGap this 10)
        (.setBackground this java.awt.Color/white)
        (if selected
@@ -85,7 +95,8 @@
       (.setRowHeight 30)
       (.setShowsRootHandles true)
       (.setCellRenderer (cell-renderer))
-      (.addMouseListener (mouse-adapter tree)))))
+      (.addMouseListener (mouse-adapter tree))
+      (.setSelectionRow 0))))
 
 (defn frame [node & args]
   (let [[parent-component] args

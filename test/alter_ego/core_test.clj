@@ -11,15 +11,26 @@
      ~@tests))
 
 (def sample-tree
-     [{:type :selector, :name "Root"}
-      [{:type :sequence, :name "Open Door"}
-       [{:type :action, :name "Door Open?", :function 'door-open?}]
-       [{:type :action, :name "Move", :function 'move}]]
-      [{:type :sequence, :name "Closed Door"}
-       [{:type :action, :name "Move", :function 'move}]
-       [{:type :action, :name "Open Door", :function 'open}]
-       [{:type :until-fail, :name "Until Fail"}
-	[{:type :action, :name "Move", :function 'move}]]]])
+     [{:type :selector :name "Root"}
+      [{:type :sequence :name "Open Door"}
+       [{:type :action :name "Door Open?" :function 'door-open?}]
+       [{:type :action :name "Move" :function 'move}]]
+      [{:type :sequence :name "Closed Door"}
+       [{:type :action :name "Move" :function 'move}]
+       [{:type :action :name "Open Door" :function 'open}]
+       [{:type :until-fail :name "Until Fail"}
+	[{:type :action :name "Move" :function 'move}]]]
+
+      [{:type :sequence :name "Fire Tree"}
+       [{:type :sequence :name "Until Dead"}
+	[{:type :action :name "Move" :function 'move :status :disabled}]
+	[{:type :action :name "Fire" :function 'fire}]]]
+
+      [{:type :sequence :name "Closed Door" :status :disabled}
+       [{:type :action :name "Move" :function 'move}]
+       [{:type :action :name "Open Door" :function 'open}]
+       [{:type :until-fail :name "Until Fail"}
+	[{:type :action :name "Move" :function 'move}]]]])
 
 (with-private-fns [alter-ego.core [node]]
   (deftest load-test
@@ -33,7 +44,9 @@
       (is (= 'move 
 	     (:symbol (first (:children (second (:children tree)))))))
       (is (= 'open
-	     (:symbol (second (:children (second (:children tree))))))))))
+	     (:symbol (second (:children (second (:children tree)))))))
+      (is (= 3 (count (:children tree))))
+      (is (= 1 (count (:children (nth (:children tree) 2))))))))
 
 (deftest from-blackboard-test
   (let [blackboard (ref {:key1 :val1 :key2 99 :target [3 4]})] 

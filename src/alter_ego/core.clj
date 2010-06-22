@@ -38,8 +38,12 @@
 	       (if (> (count v) 1)
 		 (let [p (node (first v) blackboard)
 		       c (rest v)]
-		   (append-child h (load-tree p c blackboard)))
-		 (append-child h (node (first v) blackboard)))) 
+		   (if (nil? (:status (first v)))
+		     (append-child h (load-tree p c blackboard))
+		     h))
+		 (if (nil? (:status (first v)))
+		   (append-child h (node (first v) blackboard))
+		   h)))
 	     parent children)))
 
 (defn exec [t]

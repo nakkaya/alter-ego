@@ -154,3 +154,17 @@
 			     [-1 -1 (DefaultMutableTreeNode. 
 				      (.getUserObject chosen))])
 			  selections))))))
+
+(defn disable-node-action [event tree]
+  (let [chosen (.getLastSelectedPathComponent tree)]
+    (if-not (nil? chosen)
+      (let [obj (.getUserObject chosen)] 
+	(.setUserObject chosen (assoc obj :status :disabled))
+	(tree-modified tree)))))
+
+(defn enable-node-action [event tree]
+  (let [chosen (.getLastSelectedPathComponent tree)]
+    (if-not (nil? chosen)
+      (let [obj (.getUserObject chosen)] 
+	(.setUserObject chosen (dissoc obj :status))
+	(tree-modified tree)))))
