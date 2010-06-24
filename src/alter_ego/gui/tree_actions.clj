@@ -3,6 +3,7 @@
   alter-ego.gui.tree-actions
   (:use [alter-ego.gui.util :only [add-action-listener image-icon]])
   (:use [alter-ego.gui.io :only [load-tree save-tree]])
+  (:use [alter-ego.gui.export :only [export-tree]])
   (:use [alter-ego.gui.edit-node :only [edit-node]])
   (:import (javax.swing SwingUtilities JPanel JButton JFileChooser)
 	   (javax.swing.tree DefaultMutableTreeNode TreePath)))
@@ -57,6 +58,14 @@
       (do 
 	(save-tree model (:file meta))
 	(tree-saved tree)))))
+
+(defn export-action [event tree]
+  (let [fc (JFileChooser.)] 
+    (if (= JFileChooser/APPROVE_OPTION 
+	   (.showSaveDialog fc (.getSource event)))
+      (let [file (.getSelectedFile fc)
+	    model (-> tree .getModel)]
+	(export-tree model file)))))
 
 (defn- selections [tree selections]
   (let [model (.getModel tree)] 

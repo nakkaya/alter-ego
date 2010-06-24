@@ -27,7 +27,9 @@
       (.add (button "open.png" "Open" open-action tree))
       (.add (button "save.png" "Save" save-action tree))
       (.add (button "save-as.png" "Save As" 
-		    save-as-action tree) "gapright 20")
+		    save-as-action tree))
+      (.add (button "export.png" "Export to Graphviz" 
+		    export-action tree) "gapright 20")
       (.add (button "copy.png" "Copy Node" copy-action tree ccp))
       (.add (button "cut.png" "Cut Node" cut-action tree ccp))
       (.add (button "paste.png" "Paste Node" 
