@@ -1,6 +1,6 @@
 # alter-ego
 
-Behavior Tree framework implemented in Clojure.
+A reactive AI library based on the concept of behavior trees.
 
 ## License
 
