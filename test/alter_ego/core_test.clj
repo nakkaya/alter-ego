@@ -1,5 +1,6 @@
 (ns alter-ego.core-test
   (:refer-clojure :exclude [sequence])
+  (:use [alter-ego.sample-actions] :reload-all)
   (:use [alter-ego.composite] :reload-all)
   (:use [alter-ego.decorator] :reload-all)
   (:use [alter-ego.core] :reload-all)
@@ -13,18 +14,24 @@
 (def sample-tree
      [{:type :selector :name "Root"}
       [{:type :sequence :name "Open Door"}
-       [{:type :action :name "Door Open?" :function 'door-open?}]
-       [{:type :action :name "Move" :function 'move}]]
+       [{:type :action :name "Door Open?" 
+	 :function 'alter-ego.sample-actions/door-open?}]
+       [{:type :action :name "Move" 
+	 :function 'alter-ego.sample-actions/to-room}]]
       [{:type :sequence :name "Closed Door"}
-       [{:type :action :name "Move" :function 'move}]
-       [{:type :action :name "Open Door" :function 'open}]
+       [{:type :action :name "Move" 
+	 :function 'alter-ego.sample-actions/to-door}]
+       [{:type :action :name "Open Door" 
+	 :function 'alter-ego.sample-actions/open-door}]
        [{:type :until-fail :name "Until Fail"}
-	[{:type :action :name "Move" :function 'move}]]]
+	[{:type :action :name "Move" 
+	  :function 'alter-ego.sample-actions/to-room}]]]
 
       [{:type :sequence :name "Fire Tree"}
        [{:type :sequence :name "Until Dead"}
 	[{:type :action :name "Move" :function 'move :status :disabled}]
-	[{:type :action :name "Fire" :function 'fire}]]]
+	[{:type :action :name "Fire" 
+	  :function 'alter-ego.sample-actions/to-room}]]]
 
       [{:type :sequence :name "Closed Door" :status :disabled}
        [{:type :action :name "Move" :function 'move}]
@@ -37,13 +44,13 @@
     (let [blackboard (ref {})
 	  tree (load-tree (node (first sample-tree) blackboard)
 			  (rest sample-tree) blackboard)]
-      (is (= 'door-open? 
+      (is (= 'alter-ego.sample-actions/door-open?
 	     (:symbol (first (:children (first (:children tree)))))))
-      (is (= 'move 
+      (is (= 'alter-ego.sample-actions/to-room
 	     (:symbol (second (:children (first (:children tree)))))))
-      (is (= 'move 
+      (is (= 'alter-ego.sample-actions/to-door
 	     (:symbol (first (:children (second (:children tree)))))))
-      (is (= 'open
+      (is (= 'alter-ego.sample-actions/open-door
 	     (:symbol (second (:children (second (:children tree)))))))
       (is (= 3 (count (:children tree))))
       (is (= 1 (count (:children (nth (:children tree) 2))))))))

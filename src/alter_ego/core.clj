@@ -7,7 +7,9 @@
 
 (defn- node [n blackboard]
   (let [{t :type func :function} n]
-    (cond (= t :action) (action (symbol func) blackboard)
+    (cond (= t :action) (if (nil? (resolve (symbol func)))
+			  (throw (Exception. "Symbol not defined."))
+			  (action (symbol func) blackboard))
 	  (= t :selector) (selector [])
 	  (= t :non-deterministic-selector) (non-deterministic-selector [])
 	  (= t :sequence) (sequence [])
@@ -15,7 +17,8 @@
 	  (= t :until-fail) (until-fail nil)
 	  (= t :until-success) (until-success nil)
 	  (= t :limit) (limit nil)
-	  (= t :inverter) (inverter nil))))
+	  (= t :inverter) (inverter nil)
+	  :default (throw (Exception. "Unknown node type.")))))
 
 (defmethod append-child [:alter-ego.node-types/composite 
 			 :alter-ego.node-types/type] 
