@@ -16,6 +16,16 @@
     (is (= 5 (do (run tree-1) (:i @blackboard))))
     (is (= true (run tree-1)))))
 
+(defn until-success-tree [blackboard]
+  (until-success (sequence [(dec-i-action blackboard)
+			    (small?-action blackboard)])))
+
+(deftest until-success-test
+  (let [blackboard (ref {:i 10})
+	tree-1 (until-success-tree blackboard)]
+    (is (= 4 (do (run tree-1) (:i @blackboard))))
+    (is (= true (run tree-1)))))
+
 (defn limit-tree [blackboard]
   (limit (sequence [(inc-i-action blackboard)
 		    (small?-action blackboard)]) 3))

@@ -13,6 +13,7 @@
 	  (= t :sequence) (sequence [])
 	  (= t :non-deterministic-sequence) (non-deterministic-sequence [])
 	  (= t :until-fail) (until-fail nil)
+	  (= t :until-success) (until-success nil)
 	  (= t :limit) (limit nil)
 	  (= t :inverter) (inverter nil))))
 

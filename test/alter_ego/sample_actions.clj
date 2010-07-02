@@ -7,11 +7,18 @@
   (let [{i :i} @blackboard] 
     (dosync (alter blackboard assoc :i (inc i)))))
 
+(defn dec-i [blackboard]
+  (let [{i :i} @blackboard] 
+    (dosync (alter blackboard assoc :i (dec i)))))
+
 (defn get-i [blackboard]
   (:i @blackboard))
 
 (defn inc-i-action [blackboard]
   (action 'alter-ego.sample-actions/inc-i blackboard))
+
+(defn dec-i-action [blackboard]
+  (action 'alter-ego.sample-actions/dec-i blackboard))
 
 (defn door-open? [blackboard]
   (:door-open @blackboard))

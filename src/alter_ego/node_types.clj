@@ -11,6 +11,7 @@
 (derive ::non-deterministic-sequence ::composite)
 
 (derive ::until-fail ::decorator)
+(derive ::until-success ::decorator)
 (derive ::limit ::decorator)
 (derive ::inverter ::decorator)
 

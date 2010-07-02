@@ -76,7 +76,7 @@
       (.add cancel-button "")
       (.add ok-button ""))))
 
-(defn until-fail-panel [frame tree node]
+(defn until-panel [frame tree node]
   (let [obj (.getUserObject node)
 	name-field (JTextField. (:name obj) 15)
 	ok-button (JButton. "Ok")
@@ -91,7 +91,7 @@
 			   (.setVisible frame false)))
 
     (doto (JPanel. (MigLayout. "" "[right]"))
-      (.add (JLabel. "Edit Until Fail") "split, span, gaptop 10")
+      (.add (JLabel. (str "Edit " (:type obj))) "split, span, gaptop 10")
       (.add (javax.swing.JSeparator.) "growx, wrap, gaptop 10")
       (.add (JLabel. "Name") "gap 10")
       (.add name-field "span, growx, wrap paragraph")
@@ -159,7 +159,8 @@
 	     (= type :non-deterministic-sequence) 
 	     (sequence-panel frame tree node)
 	     (= type :action) (action-panel frame tree node)
-	     (= type :until-fail) (until-fail-panel frame tree node)
+	     (= type :until-fail) (until-panel frame tree node)
+	     (= type :until-success) (until-panel frame tree node)
 	     (= type :limit) (limit-panel frame tree node)
 	     (= type :inverter) (inverter-panel frame tree node)))
       (.pack))))

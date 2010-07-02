@@ -9,13 +9,26 @@
   [c]
   (with-meta {:children c} {:type :alter-ego.node-types/until-fail}))
 
-(defn- run-until [children]
+(defn- run-until-fail [children]
   (if (run children)
-    (run-until children) true))
+    (run-until-fail children) true))
 
 (defmethod run :alter-ego.node-types/until-fail [d]
   (let [{children :children} d]
-    (run-until children)))
+    (run-until-fail children)))
+
+(defn until-success
+  "Runs its children until it returns true."
+  [c]
+  (with-meta {:children c} {:type :alter-ego.node-types/until-success}))
+
+(defn- run-until-success [children]
+  (if (not (run children))
+    (run-until-success children) true))
+
+(defmethod run :alter-ego.node-types/until-success [d]
+  (let [{children :children} d]
+    (run-until-success children)))
 
 (defn limit 
   "Unless its children succeeds will keep running it at most i times."

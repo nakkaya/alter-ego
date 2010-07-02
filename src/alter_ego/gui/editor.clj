@@ -37,6 +37,7 @@
 		  insert-action tree :non-deterministic-sequence))
       (.addSeparator)
       (.add (item "Until Fail" insert-action tree :until-fail))
+      (.add (item "Until Success" insert-action tree :until-success))
       (.add (item "Limit" insert-action tree :limit))
       (.add (item "Inverter" insert-action tree :inverter)))
 
@@ -64,7 +65,8 @@
 	(= type :non-deterministic-selector) (image-icon "selector.png")
 	(= type :sequence) (image-icon "sequence.png")
 	(= type :non-deterministic-sequence) (image-icon "sequence.png")
-	(= type :until-fail) (image-icon "until-fail.png")
+	(= type :until-fail) (image-icon "until.png")
+	(= type :until-success) (image-icon "until.png")
 	(= type :inverter) (image-icon "inverter.png")
 	(= type :limit) (image-icon "limit.png")
 	:else (image-icon "action.png")))
