@@ -60,7 +60,16 @@
 	(tree-saved tree)))))
 
 (defn export-action [event tree]
-  (let [fc (JFileChooser.)] 
+  (let [model (-> tree .getModel)
+	meta (meta (-> model .getRoot .getUserObject))
+	fc (JFileChooser.)]
+    (.setDialogTitle fc "Export to Graphviz")
+
+    (if-not (nil? meta)
+      (let [file (:file meta)
+	    name (str (re-find #".*\." (.getName file)) "gv")] 
+	(.setSelectedFile fc (java.io.File. file name))))
+
     (if (= JFileChooser/APPROVE_OPTION 
 	   (.showSaveDialog fc (.getSource event)))
       (let [file (.getSelectedFile fc)
