@@ -73,22 +73,27 @@
 	:else (image-icon "action.png")))
 
 (defn cell-renderer []
-  (proxy [DefaultTreeCellRenderer] []
-    (getTreeCellRendererComponent
-     [tree value selected expanded leaf row has-focus?]
-     (let [{type :type n :name status :status} (.getUserObject value)]
-       (if (and (not (nil? status))
-		(= status :disabled))
-	 (.setText this (str n " (" (name status) "/" (name type) ")"))
-	 (.setText this (str n " (" (name type) ")")))
-       (.setOpaque this true)
-       (.setIcon this (cell-icon type status))
-       (.setIconTextGap this 10)
-       (.setBackground this java.awt.Color/white)
-       (if selected
-	 (.setBorder this (LineBorder. (java.awt.Color. 147 157 195) 3 true))
-	 (.setBorder this nil))
-       this))))
+  (doto
+      (proxy [DefaultTreeCellRenderer] []
+	(getTreeCellRendererComponent
+	 [tree value selected expanded leaf row has-focus?]
+	 (let [{type :type n :name status :status} (.getUserObject value)]
+	   (if (and (not (nil? status))
+		    (= status :disabled))
+	     (.setText this (str n " (" (name status) "/" (name type) ")"))
+	     (.setText this (str n " (" (name type) ")")))
+	   (.setOpaque this true)
+	   (.setIcon this (cell-icon type status))
+	   (.setIconTextGap this 10)
+	   (.setBackground this java.awt.Color/white)
+	   (if selected
+	     (.setBorder this 
+			 (LineBorder. (java.awt.Color. 147 157 195) 3 true))
+	     (.setBorder this nil))
+	   this)))
+    (.setLeafIcon (image-icon "edit.png"))
+    (.setClosedIcon (image-icon "edit.png"))
+    (.setOpenIcon (image-icon "edit.png"))))
 
 (defn cell-editor [tree renderer]
   (proxy [DefaultTreeCellEditor] [tree renderer]
