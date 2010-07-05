@@ -9,7 +9,7 @@
 	   (javax.swing.tree DefaultTreeCellRenderer DefaultMutableTreeNode 
 			     DefaultTreeCellEditor DefaultTreeModel)
 	   (java.awt.event MouseAdapter)
-	   (javax.swing JPopupMenu JMenu JMenuItem)
+	   (javax.swing JFrame JPopupMenu JMenu JMenuItem)
 	   (javax.swing.border LineBorder)
 	   (java.awt BorderLayout))
   (:gen-class))
@@ -145,10 +145,11 @@
     (doto panel
       (.add toolbar BorderLayout/NORTH)
       (.add (JScrollPane. tree) BorderLayout/CENTER))
-    (doto (javax.swing.JFrame. title)
+    (doto (JFrame. title)
       (.add panel)
       (.pack)
       (.setLocationRelativeTo parent-component)
+      (.setDefaultCloseOperation JFrame/DISPOSE_ON_CLOSE)
       (.setVisible true))))
 
 (defn -main [& args]
