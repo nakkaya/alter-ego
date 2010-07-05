@@ -11,7 +11,7 @@
 	   (java.awt.event MouseAdapter)
 	   (javax.swing JPopupMenu JMenu JMenuItem)
 	   (javax.swing.border LineBorder)
-	   (net.miginfocom.swing MigLayout))
+	   (java.awt BorderLayout))
   (:gen-class))
 
 (defn popup [tree]
@@ -135,7 +135,7 @@
 
 (defn frame [node & args]
   (let [[parent-component] args
-	panel (JPanel. (MigLayout. "fill,insets 0 0 0 0"))
+	panel (JPanel. (BorderLayout.))
 	ccp (ref [])
 	tree (tree node)
 	toolbar (toolbar tree ccp)
@@ -143,8 +143,8 @@
 	title (if (nil? meta) "scratch" (.getName (:file meta)))]
     (add-key-typed-listener tree key-bindings tree ccp)
     (doto panel
-      (.add toolbar "wrap")
-      (.add (JScrollPane. tree) "grow"))
+      (.add toolbar BorderLayout/NORTH)
+      (.add (JScrollPane. tree) BorderLayout/CENTER))
     (doto (javax.swing.JFrame. title)
       (.add panel)
       (.pack)
