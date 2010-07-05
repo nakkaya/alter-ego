@@ -43,3 +43,11 @@
 	tree-2 (inverter (small?-action (ref {:i 0})))]
     (is (= true (run tree-1)))
     (is (= false (run tree-2)))))
+
+(deftest try-catch-test
+  (let [tree-1 (try-catch (small?-action (ref {:i 0})))
+	tree-2 (try-catch (small?-action (ref {:i 6})))
+	tree-3 (try-catch (throw-exception-action (ref {:i 0})))]
+    (is (= true (run tree-1)))
+    (is (= false (run tree-2)))
+    (is (= false (run tree-3)))))

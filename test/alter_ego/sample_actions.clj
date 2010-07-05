@@ -49,3 +49,9 @@
 
 (defn open-door-action [blackboard]
   (action 'alter-ego.sample-actions/open-door blackboard))
+
+(defn throw-exception [blackboard]
+  (throw (Exception. "Some Error")) true)
+
+(defn throw-exception-action [blackboard]
+  (action 'alter-ego.sample-actions/throw-exception blackboard))

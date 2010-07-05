@@ -40,7 +40,8 @@
       (.add (item "Until Fail" insert-action tree :until-fail))
       (.add (item "Until Success" insert-action tree :until-success))
       (.add (item "Limit" insert-action tree :limit))
-      (.add (item "Inverter" insert-action tree :inverter)))
+      (.add (item "Inverter" insert-action tree :inverter))
+      (.add (item "Try Catch" insert-action tree :try-catch)))
 
     (doto popup
       (.add insert-menu)
@@ -70,6 +71,7 @@
 	(= type :until-success) (image-icon "until.png")
 	(= type :inverter) (image-icon "inverter.png")
 	(= type :limit) (image-icon "limit.png")
+	(= type :try-catch) (image-icon "try-catch.png")
 	:else (image-icon "action.png")))
 
 (defn cell-renderer []

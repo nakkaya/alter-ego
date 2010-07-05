@@ -18,6 +18,7 @@
 	  (= t :until-success) (until-success nil)
 	  (= t :limit) (limit nil)
 	  (= t :inverter) (inverter nil)
+	  (= t :try-catch) (try-catch nil)
 	  :default (throw (Exception. "Unknown node type.")))))
 
 (defmethod append-child [:alter-ego.node-types/composite 

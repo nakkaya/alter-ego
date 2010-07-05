@@ -55,3 +55,12 @@
 (defmethod run :alter-ego.node-types/inverter [c]
   (let [{children :children} c]
     (not (run children))))
+
+(defn try-catch
+  "Execute children on exception return false."
+  [c]
+  (with-meta {:children c} {:type :alter-ego.node-types/try-catch}))
+
+(defmethod run :alter-ego.node-types/try-catch [c]
+  (let [{children :children} c]
+    (try (run children) (catch Exception e false))))

@@ -19,6 +19,7 @@
 		  (= type :until-success) {:type type :name name}
 		  (= type :inverter) {:type type :name name}
 		  (= type :limit) {:type type :name name :times 1}
+		  (= type :try-catch) {:type type :name name}
 		  :default (throw (Exception. "Unknown node type.")))]
     (DefaultMutableTreeNode. obj)))
 
