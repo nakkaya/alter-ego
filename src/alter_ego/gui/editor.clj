@@ -6,7 +6,8 @@
   (:use [alter-ego.gui.toolbar :only [toolbar]] :reload-all)
   (:use [alter-ego.gui.tree-actions] :reload-all)
   (:import (javax.swing SwingUtilities JScrollPane JTree JPanel)
-	   (javax.swing.tree DefaultTreeCellRenderer DefaultMutableTreeNode)
+	   (javax.swing.tree DefaultTreeCellRenderer DefaultMutableTreeNode 
+			     DefaultTreeCellEditor DefaultTreeModel)
 	   (java.awt.event MouseAdapter)
 	   (javax.swing JPopupMenu JMenu JMenuItem)
 	   (javax.swing.border LineBorder)
@@ -89,15 +90,29 @@
 	 (.setBorder this nil))
        this))))
 
+(defn cell-editor [tree renderer]
+  (proxy [DefaultTreeCellEditor] [tree renderer]
+    (isCellEditable [e] (proxy-super isCellEditable e))))
+
+(defn tree-model [root]
+ (proxy [DefaultTreeModel] [root] 
+   (valueForPathChanged 
+    [path val] 
+    (.setUserObject (.getLastPathComponent path) (read-string val)))))
+
 (defn tree [node]
-  (let [tree (JTree. node)]
+  (let [model (tree-model node)
+	tree (JTree. model)
+	renderer (cell-renderer)]
     (.setSelectionMode 
      (.getSelectionModel tree) 
      javax.swing.tree.TreeSelectionModel/CONTIGUOUS_TREE_SELECTION)
     (doto tree
+      (.setEditable true)
       (.setRowHeight 30)
       (.setShowsRootHandles true)
-      (.setCellRenderer (cell-renderer))
+      (.setCellRenderer renderer)
+      (.setCellEditor (cell-editor tree renderer))
       (.addMouseListener (mouse-adapter tree))
       (.setSelectionRow 0))))
 

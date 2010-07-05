@@ -4,12 +4,23 @@
   (:use [alter-ego.gui.util :only [add-action-listener image-icon]])
   (:use [alter-ego.gui.io :only [load-tree save-tree]])
   (:use [alter-ego.gui.export :only [export-tree]])
-  (:use [alter-ego.gui.edit-node :only [edit-node]])
   (:import (javax.swing SwingUtilities JPanel JButton JFileChooser)
 	   (javax.swing.tree DefaultMutableTreeNode TreePath)))
 
 (defn tree-node [type name]
-  (DefaultMutableTreeNode. {:type type :name name}))
+  (let [obj (cond (= type :selector) {:type type :name name}
+		  (= type :non-deterministic-selector) 
+		  {:type type :name name}
+		  (= type :sequence) {:type type :name name}
+		  (= type :non-deterministic-sequence) 
+		  {:type type :name name}
+		  (= type :action) {:type type :name name :function "nil"}
+		  (= type :until-fail) {:type type :name name}
+		  (= type :until-success) {:type type :name name}
+		  (= type :inverter) {:type type :name name}
+		  (= type :limit) {:type type :name name :times 1}
+		  :default (throw (Exception. "Unknown node type.")))]
+    (DefaultMutableTreeNode. obj)))
 
 (defn- frame [node source]
   ((resolve 'alter-ego.gui.editor/frame) node source))
@@ -116,11 +127,8 @@
 	(tree-modified tree)))))
 
 (defn edit-action [event tree]
-  (let [chosen (.getLastSelectedPathComponent tree)]
-    (if-not (nil? chosen)
-      (doto (edit-node tree chosen)
-	(.setLocationRelativeTo tree)
-	(.setVisible true)))
+  (let [chosen (.getSelectionPath tree)]
+    (.startEditingAtPath tree chosen)
     (tree-modified tree)))
 
 
