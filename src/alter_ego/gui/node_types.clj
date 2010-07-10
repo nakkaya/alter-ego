@@ -37,4 +37,8 @@
 		  :type :decorator}
       :print-blackboard {:name "Print Blackboard"
 			 :icon "debug.png"
-			 :type :decorator}})
+			 :type :decorator}
+      :print-string {:name "Print String"
+		     :icon "debug.png"
+		     :type :decorator
+		     :opts {:string "nil"}}})

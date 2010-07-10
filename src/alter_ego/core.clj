@@ -6,7 +6,7 @@
   (:use [alter-ego.decorator] :reload-all))
 
 (defn- node [n blackboard]
-  (let [{t :type func :function} n]
+  (let [{t :type func :function string :string} n]
     (cond (= t :action) (if (nil? (resolve (symbol func)))
 			  (throw (Exception. "Symbol not defined."))
 			  (action (symbol func) blackboard))
@@ -20,6 +20,7 @@
 	  (= t :inverter) (inverter nil)
 	  (= t :try-catch) (try-catch nil)
 	  (= t :print-blackboard) (print-blackboard blackboard nil)
+	  (= t :print-string) (print-string string nil)
 	  :default (throw (Exception. "Unknown node type.")))))
 
 (defmethod append-child [:alter-ego.node-types/composite 

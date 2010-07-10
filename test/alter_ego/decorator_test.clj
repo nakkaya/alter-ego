@@ -61,3 +61,11 @@
     (is (= false (run tree-2)))
     (is (= ":i  ==>  6\n" (with-out-str (run tree-2))))
     (is (= ":i  ==>  0\n" (with-out-str (run tree-1))))))
+
+(deftest print-string-test
+  (let [tree-1 (print-string "1" (small?-action (ref {:i 0})))
+	tree-2 (print-string "2" (small?-action (ref {:i 6})))]
+    (is (= true (run tree-1)))
+    (is (= false (run tree-2)))
+    (is (= "2\n" (with-out-str (run tree-2))))
+    (is (= "1\n" (with-out-str (run tree-1))))))

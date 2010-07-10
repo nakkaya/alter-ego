@@ -76,3 +76,14 @@
     (doseq [[key val] @blackboard]
       (println key " ==> " val))
     (run children)))
+
+(defn print-string
+  "Print a debug message."
+  [s c]
+  (with-meta {:string s :children c} 
+    {:type :alter-ego.node-types/print-string}))
+
+(defmethod run :alter-ego.node-types/print-string [n]
+  (let [{children :children string :string} n]
+    (println string)
+    (run children)))
