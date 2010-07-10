@@ -184,3 +184,16 @@
       (let [obj (.getUserObject chosen)] 
 	(.setUserObject chosen (dissoc obj :status))
 	(tree-modified tree)))))
+
+(defn decorate-with-action [event tree type]
+  (let [model (.getModel tree)
+	chosen (.getLastSelectedPathComponent tree)
+	parent (.getParent chosen)
+	idx (.getIndex parent chosen)
+	decorator (tree-node type "new")]
+    (if-not (nil? chosen)
+      (do 
+	(.removeNodeFromParent model chosen)
+	(.insert decorator chosen 0)
+	(.insertNodeInto model decorator parent idx)))
+    (tree-modified tree)))

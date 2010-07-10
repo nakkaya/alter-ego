@@ -26,7 +26,8 @@
 		    (doto (JMenuItem. s)
 		      (add-action-listener f tree))))
 	popup (JPopupMenu.)
-	insert-menu (JMenu. "Insert")]
+	insert-menu (JMenu. "Insert")
+	decorate-menu (JMenu. "Decorate Node With")]
 
     (doseq [[type {name :name}] 
 	    (filter #(= :action (:type (second %))) node-types)]
@@ -40,8 +41,13 @@
 	    (filter #(= :decorator (:type (second %))) node-types)]
       (.add insert-menu (item name insert-action tree type)))
 
+    (doseq [[type {name :name}] 
+	    (filter #(= :decorator (:type (second %))) node-types)]
+      (.add decorate-menu (item name decorate-with-action tree type)))
+
     (doto popup
       (.add insert-menu)
+      (.add decorate-menu)
       (.add (item "Edit" edit-action tree))
       (.addSeparator)
       (.add (if (or (nil? status)
