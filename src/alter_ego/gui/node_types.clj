@@ -41,4 +41,7 @@
       :print-string {:name "Print String"
 		     :icon "debug.png"
 		     :type :decorator
-		     :opts {:string "nil"}}})
+		     :opts {:string "nil"}}
+      :break-point {:name "Breakpoint"
+		    :icon "debug.png"
+		    :type :decorator}})

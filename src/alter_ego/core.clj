@@ -21,6 +21,7 @@
 	  (= t :try-catch) (try-catch nil)
 	  (= t :print-blackboard) (print-blackboard blackboard nil)
 	  (= t :print-string) (print-string string nil)
+	  (= t :break-point) (break-point nil)
 	  :default (throw (Exception. "Unknown node type.")))))
 
 (defmethod append-child [:alter-ego.node-types/composite 

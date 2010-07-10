@@ -17,6 +17,7 @@
 (derive ::try-catch ::decorator)
 (derive ::print-blackboard ::decorator)
 (derive ::print-string ::decorator)
+(derive ::break-point ::decorator)
 
 (defmulti run 
   "Given a node dispatch to its run implementation."

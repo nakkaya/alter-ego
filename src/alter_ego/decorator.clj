@@ -87,3 +87,15 @@
   (let [{children :children string :string} n]
     (println string)
     (run children)))
+
+(defn break-point
+  "Insert a debug breakpoint."
+  [s c]
+  (with-meta {:children c} 
+    {:type :alter-ego.node-types/break-point}))
+
+(defmethod run :alter-ego.node-types/break-point [n]
+  (let [{children :children} n]
+    (println "Press Enter to resume execution...")
+    (.read System/in)
+    (run children)))
