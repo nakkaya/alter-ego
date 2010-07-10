@@ -51,3 +51,13 @@
     (is (= true (run tree-1)))
     (is (= false (run tree-2)))
     (is (= false (run tree-3)))))
+
+(deftest print-blackboard-test
+  (let [bb1 (ref {:i 0})
+	tree-1 (print-blackboard bb1 (small?-action bb1))
+	bb2 (ref {:i 6})
+	tree-2 (print-blackboard bb2 (small?-action bb2))]
+    (is (= true (run tree-1)))
+    (is (= false (run tree-2)))
+    (is (= ":i  ==>  6\n" (with-out-str (run tree-2))))
+    (is (= ":i  ==>  0\n" (with-out-str (run tree-1))))))

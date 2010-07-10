@@ -34,4 +34,7 @@
 		 :type :decorator}
       :try-catch {:name "Try Catch" 
 		  :icon "try-catch.png"
-		  :type :decorator}})
+		  :type :decorator}
+      :print-blackboard {:name "Print Blackboard"
+			 :icon "debug.png"
+			 :type :decorator}})

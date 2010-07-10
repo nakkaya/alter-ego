@@ -64,3 +64,15 @@
 (defmethod run :alter-ego.node-types/try-catch [c]
   (let [{children :children} c]
     (try (run children) (catch Exception e false))))
+
+(defn print-blackboard
+  "Print the content of the blackboard"
+  [b c]
+  (with-meta {:blackboard b :children c} 
+    {:type :alter-ego.node-types/print-blackboard}))
+
+(defmethod run :alter-ego.node-types/print-blackboard [c]
+  (let [{children :children blackboard :blackboard} c]
+    (doseq [[key val] @blackboard]
+      (println key " ==> " val))
+    (run children)))
