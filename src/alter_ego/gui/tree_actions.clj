@@ -2,26 +2,15 @@
        :skip-wiki true}
   alter-ego.gui.tree-actions
   (:use [alter-ego.gui.util :only [add-action-listener image-icon]])
+  (:use [alter-ego.gui.node-types] :reload-all)
   (:use [alter-ego.gui.io :only [load-tree save-tree]])
   (:use [alter-ego.gui.export :only [export-tree]])
   (:import (javax.swing SwingUtilities JPanel JButton JFileChooser)
 	   (javax.swing.tree DefaultMutableTreeNode TreePath)))
 
 (defn tree-node [type name]
-  (let [obj (cond (= type :selector) {:type type :name name}
-		  (= type :non-deterministic-selector) 
-		  {:type type :name name}
-		  (= type :sequence) {:type type :name name}
-		  (= type :non-deterministic-sequence) 
-		  {:type type :name name}
-		  (= type :action) {:type type :name name :function "nil"}
-		  (= type :until-fail) {:type type :name name}
-		  (= type :until-success) {:type type :name name}
-		  (= type :inverter) {:type type :name name}
-		  (= type :limit) {:type type :name name :times 1}
-		  (= type :try-catch) {:type type :name name}
-		  :default (throw (Exception. "Unknown node type.")))]
-    (DefaultMutableTreeNode. obj)))
+  (DefaultMutableTreeNode. (merge {:type type :name name} 
+				  (:opts (node-types type)))))
 
 (defn- frame [node source]
   ((resolve 'alter-ego.gui.editor/frame) node source))

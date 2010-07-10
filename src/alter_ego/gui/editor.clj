@@ -3,6 +3,7 @@
   alter-ego.gui.editor
   (:use [alter-ego.gui.util :only [add-action-listener 
 				   add-key-typed-listener image-icon]])
+  (:use [alter-ego.gui.node-types] :reload-all)
   (:use [alter-ego.gui.toolbar :only [toolbar]] :reload-all)
   (:use [alter-ego.gui.tree-actions] :reload-all)
   (:import (javax.swing SwingUtilities JScrollPane JTree JPanel)
@@ -27,21 +28,17 @@
 	popup (JPopupMenu.)
 	insert-menu (JMenu. "Insert")]
 
-    (doto insert-menu
-      (.add (item "Action" insert-action tree :action))
-      (.addSeparator)
-      (.add (item "Selector" insert-action tree :selector))
-      (.add (item "Non Deterministic Selector" 
-		  insert-action tree :non-deterministic-selector))
-      (.add (item "Seqence" insert-action tree :sequence))
-      (.add (item "Non Deterministic Sequence" 
-		  insert-action tree :non-deterministic-sequence))
-      (.addSeparator)
-      (.add (item "Until Fail" insert-action tree :until-fail))
-      (.add (item "Until Success" insert-action tree :until-success))
-      (.add (item "Limit" insert-action tree :limit))
-      (.add (item "Inverter" insert-action tree :inverter))
-      (.add (item "Try Catch" insert-action tree :try-catch)))
+    (doseq [[type {name :name}] 
+	    (filter #(= :action (:type (second %))) node-types)]
+      (.add insert-menu (item name insert-action tree type)))
+    (.addSeparator insert-menu)
+    (doseq [[type {name :name}] 
+	    (filter #(= :composite (:type (second %))) node-types)]
+      (.add insert-menu (item name insert-action tree type)))
+    (.addSeparator insert-menu)
+    (doseq [[type {name :name}] 
+	    (filter #(= :decorator (:type (second %))) node-types)]
+      (.add insert-menu (item name insert-action tree type)))
 
     (doto popup
       (.add insert-menu)
@@ -60,19 +57,10 @@
       (mouseReleased [e] (if (.isPopupTrigger e) (show e))))))
 
 (defn cell-icon [type status]
-  (cond (and (not (nil? status))
-	     (= status :disabled)) (image-icon "disabled.png")
-	(= type :action) (image-icon "action.png")
-	(= type :selector) (image-icon "selector.png")
-	(= type :non-deterministic-selector) (image-icon "selector.png")
-	(= type :sequence) (image-icon "sequence.png")
-	(= type :non-deterministic-sequence) (image-icon "sequence.png")
-	(= type :until-fail) (image-icon "until.png")
-	(= type :until-success) (image-icon "until.png")
-	(= type :inverter) (image-icon "inverter.png")
-	(= type :limit) (image-icon "limit.png")
-	(= type :try-catch) (image-icon "try-catch.png")
-	:else (image-icon "action.png")))
+  (if (and (not (nil? status))
+	     (= status :disabled)) 
+    (image-icon "disabled.png")
+    (image-icon (:icon (node-types type)))))
 
 (defn cell-renderer []
   (doto
