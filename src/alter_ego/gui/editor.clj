@@ -127,7 +127,8 @@
 	    (= key \e) (edit-action event tree)
 	    (= key \v) (paste-action event tree ccp)
 	    (= key \x) (cut-action event tree ccp)
-	    (= key \c) (copy-action event tree ccp)))))
+	    (= key \c) (copy-action event tree ccp)
+	    (= key \w) (dispose-frame-action event tree)))))
 
 (defn frame [node & args]
   (let [[parent-component] args

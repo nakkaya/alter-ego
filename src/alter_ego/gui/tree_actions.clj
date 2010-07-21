@@ -197,3 +197,6 @@
 	(.insert decorator chosen 0)
 	(.insertNodeInto model decorator parent idx)))
     (tree-modified tree)))
+
+(defn dispose-frame-action [event tree]
+  (.dispose (SwingUtilities/getRoot tree)))
