@@ -82,6 +82,7 @@
 	   (.setIcon this (cell-icon type status))
 	   (.setIconTextGap this 10)
 	   (.setBackground this java.awt.Color/white)
+	   (.setFont this (java.awt.Font. "Arial" java.awt.Font/PLAIN 15))
 	   (if selected
 	     (.setBorder this 
 			 (LineBorder. (java.awt.Color. 147 157 195) 3 true))
@@ -93,7 +94,12 @@
 
 (defn cell-editor [tree renderer]
   (proxy [DefaultTreeCellEditor] [tree renderer]
-    (isCellEditable [e] (proxy-super isCellEditable e))))
+    (isCellEditable [e] (proxy-super isCellEditable e))
+    (getTreeCellEditorComponent
+     [tree val selected? expanded? leaf row]
+     (doto (proxy-super getTreeCellEditorComponent 
+			tree val selected? expanded? leaf row)
+       (.setFont (java.awt.Font. "Arial" java.awt.Font/PLAIN 15))))))
 
 (defn tree-model [root]
  (proxy [DefaultTreeModel] [root] 
