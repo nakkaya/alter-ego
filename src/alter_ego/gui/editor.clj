@@ -15,6 +15,16 @@
 	   (java.awt BorderLayout))
   (:gen-class))
 
+(defn- filter-nodes
+  ([tree type]
+     (filter #(= (:type %) type) 
+	     (filter-nodes (-> tree .getModel .getRoot))))
+  ([node]
+     (let [children (.children node)
+	   node (.getUserObject node)] 
+       (reduce (fn[h v] (clojure.set/union h (filter-nodes v))) 
+	       #{node} (enumeration-seq children)))))
+
 (defn popup [tree]
   (let [chosen (.getLastSelectedPathComponent tree)
 	{status :status} (.getUserObject chosen)
@@ -27,11 +37,18 @@
 		      (add-action-listener f tree))))
 	popup (JPopupMenu.)
 	insert-menu (JMenu. "Insert")
+	actions-menu (JMenu. "Defined Actions")
 	decorate-menu (JMenu. "Decorate Node With")]
 
     (doseq [[type {name :name}] 
 	    (filter #(= :action (:type (second %))) node-types)]
       (.add insert-menu (item name insert-action tree type)))
+
+    (doseq [action (filter-nodes tree :action)]
+      (.add actions-menu 
+	    (item (:name action) insert-defined-action tree action)))
+    (.add insert-menu actions-menu)
+
     (.addSeparator insert-menu)
     (doseq [[type {name :name}] 
 	    (filter #(= :composite (:type (second %))) node-types)]

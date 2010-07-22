@@ -121,14 +121,18 @@
     (.startEditingAtPath tree chosen)
     (tree-modified tree)))
 
+(defn- insert-into-tree [tree obj]
+  (let [chosen (.getLastSelectedPathComponent tree)
+  	child-cnt (.getChildCount chosen)]
+    (if-not (nil? chosen)
+      (-> tree .getModel (.insertNodeInto obj chosen child-cnt)))
+    (tree-modified tree)))
 
 (defn insert-action [event tree type]
-  (let [chosen (.getLastSelectedPathComponent tree)
-	child-cnt (.getChildCount chosen)
-	child (tree-node type "new")]
-    (if-not (nil? chosen)
-      (-> tree .getModel (.insertNodeInto child chosen child-cnt)))
-    (tree-modified tree)))
+  (insert-into-tree tree (tree-node type "new")))
+
+(defn insert-defined-action [event tree obj]
+  (insert-into-tree tree (DefaultMutableTreeNode. obj)))
 
 (defn remove-action [event tree]
   (let [chosen (.getLastSelectedPathComponent tree)]
