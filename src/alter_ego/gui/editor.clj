@@ -160,17 +160,20 @@
 	tree (tree node)
 	toolbar (toolbar tree ccp)
 	meta (meta (.getUserObject node))
-	title (if (nil? meta) "scratch" (.getName (:file meta)))]
+	title (if (nil? meta) "scratch" (.getName (:file meta)))
+	frame (JFrame. title)]
     (add-key-typed-listener tree key-bindings tree ccp)
     (doto panel
       (.add toolbar BorderLayout/NORTH)
       (.add (JScrollPane. tree) BorderLayout/CENTER))
-    (doto (JFrame. title)
+    (doto frame
       (.add panel)
       (.pack)
       (.setLocationRelativeTo parent-component)
       (.setDefaultCloseOperation JFrame/DISPOSE_ON_CLOSE)
-      (.setVisible true))))
+      (.setVisible true))
+    (.requestFocus tree)
+    frame))
 
 (defn -main [& args]
   (let [frame #(frame (tree-node :selector "Root"))] 
