@@ -65,3 +65,10 @@
 			    (map keyword bindings)
 			    (repeat (list (list 'deref `~blackboard)))))]
      ~@body))
+
+(defmacro defaction
+  "Define an action which looks up its bindings from blackboard."
+  [name params & body]
+  `(defn ~name [~'blackboard] 
+     (from-blackboard ~'blackboard ~params
+       ~@body)))
