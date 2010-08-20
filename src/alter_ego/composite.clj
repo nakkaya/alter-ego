@@ -3,13 +3,6 @@
   (:refer-clojure :exclude [sequence])
   (:use [alter-ego.node-types] :reload-all))
 
-(defn- shuffle
-  "Return a random permutation of coll"
-  [coll]
-  (let [l (java.util.ArrayList. coll)]
-    (java.util.Collections/shuffle l)
-    (seq l)))
-
 (defn action 
   "This node wraps a function call with blackboard as its argument."
   [symbol blackboard]
