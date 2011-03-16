@@ -10,10 +10,10 @@
     (cond (= t :action) (if (nil? (resolve (symbol func)))
 			  (throw (Exception. "Symbol not defined."))
 			  (action (symbol func) blackboard))
-	  (= t :selector) (selector [])
-	  (= t :non-deterministic-selector) (non-deterministic-selector [])
-	  (= t :sequence) (sequence [])
-	  (= t :non-deterministic-sequence) (non-deterministic-sequence [])
+	  (= t :selector) (selector)
+	  (= t :non-deterministic-selector) (non-deterministic-selector)
+	  (= t :sequence) (sequence)
+	  (= t :non-deterministic-sequence) (non-deterministic-sequence)
 	  (= t :until-fail) (until-fail nil)
 	  (= t :until-success) (until-success nil)
 	  (= t :limit) (limit nil)
@@ -27,7 +27,7 @@
 (defmethod append-child [:alter-ego.node-types/composite 
 			 :alter-ego.node-types/type] 
   [p c]
-  (assoc p :children (conj (:children p) c)))
+  (assoc p :children (reverse (conj (reverse (:children p)) c))))
 
 (defmethod append-child [:alter-ego.node-types/decorator
 			 :alter-ego.node-types/type] 
@@ -44,14 +44,14 @@
   ([parent children blackboard]
      (reduce (fn[h v]
 	       (if (> (count v) 1)
-		 (let [p (node (first v) blackboard)
-		       c (rest v)]
-		   (if (nil? (:status (first v)))
-		     (append-child h (load-tree p c blackboard))
-		     h))
-		 (if (nil? (:status (first v)))
-		   (append-child h (node (first v) blackboard))
-		   h)))
+	         (let [p (node (first v) blackboard)
+	               c (rest v)]
+	           (if (nil? (:status (first v)))
+	             (append-child h (load-tree p c blackboard))
+	             h))
+	         (if (nil? (:status (first v)))
+	           (append-child h (node (first v) blackboard))
+	           h)))
 	     parent children)))
 
 (defn exec [t]

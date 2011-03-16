@@ -16,7 +16,7 @@
 (defn selector 
   "Tries to run all its children in sequence as soon as one succeeds 
    it also succeeds."
-  [children]
+  [& children]
   (with-meta {:children children} {:type :alter-ego.node-types/selector}))
 
 (defn- select [children]
@@ -31,7 +31,7 @@
 
 (defn non-deterministic-selector 
   "Same as selector, but shuffles all its children prior to execution."
-  [children]
+  [& children]
   (with-meta {:children children} 
     {:type :alter-ego.node-types/non-deterministic-selector}))
 
@@ -42,7 +42,7 @@
 (defn sequence 
   "Runs all of its children in sequential order. If one of them fails, 
    it also fails. Once all of them succeeds, it also succeeds."
-  [children]
+  [& children]
   (with-meta {:children children} {:type :alter-ego.node-types/sequence}))
 
 (defn- seq-run [children]
@@ -56,7 +56,7 @@
 
 (defn non-deterministic-sequence 
   "Same as sequence, but shuffles all its children prior to execution."
-  [children]
+  [& children]
   (with-meta {:children children} 
     {:type :alter-ego.node-types/non-deterministic-sequence}))
 

@@ -7,8 +7,8 @@
   (:use [clojure.test]))
 
 (defn until-fail-tree [blackboard]
-  (until-fail (sequence [(inc-i-action blackboard)
-			 (small?-action blackboard)])))
+  (until-fail (sequence (inc-i-action blackboard)
+                        (small?-action blackboard))))
 
 (deftest until-fail-test
   (let [blackboard (ref {:i 0})
@@ -17,8 +17,8 @@
     (is (= true (run tree-1)))))
 
 (defn until-success-tree [blackboard]
-  (until-success (sequence [(dec-i-action blackboard)
-			    (small?-action blackboard)])))
+  (until-success (sequence (dec-i-action blackboard)
+                           (small?-action blackboard))))
 
 (deftest until-success-test
   (let [blackboard (ref {:i 10})
@@ -27,8 +27,8 @@
     (is (= true (run tree-1)))))
 
 (defn limit-tree [blackboard]
-  (limit (sequence [(inc-i-action blackboard)
-		    (small?-action blackboard)]) 3))
+  (limit (sequence (inc-i-action blackboard)
+                   (small?-action blackboard)) 3))
 
 (deftest limit-test
   (let [blackboard (ref {:i 6})
