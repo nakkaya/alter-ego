@@ -3,6 +3,9 @@
   (:refer-clojure :exclude [sequence])
   (:use [alter-ego.node-types] :reload-all))
 
+(defmethod run :function [f]
+           (boolean (f)))
+
 (defn action 
   "This node wraps a function call with blackboard as its argument."
   [symbol blackboard]

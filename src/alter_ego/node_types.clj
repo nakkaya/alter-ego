@@ -21,7 +21,9 @@
 
 (defmulti run 
   "Given a node dispatch to its run implementation."
-  (fn [type] ((meta type) :type)))
+  (fn [type] (if (fn? type)
+               :function
+               ((meta type) :type))))
 
 (defmulti append-child
   "Given nodes parent and child, dispatch to correct append-child 

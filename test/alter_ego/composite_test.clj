@@ -8,7 +8,11 @@
 (deftest action-test
   (let [board (ref {:i 0})]
     (is (= 1 (do (run (inc-i-action board)) (:i @board))))
-    (is (= true (run (inc-i-action board))))))
+    (is (= true (run (inc-i-action board))))
+    (is (= 5 (do (run (fn []
+                        (dosync (alter board assoc :i 5)))) (:i @board))))
+    (is (= true (run (fn []
+                        (dosync (alter board assoc :i 5))))))))
 
 (defn selector-tree-1 [blackboard]
   (selector (door-open?-action blackboard)
@@ -59,15 +63,24 @@
             (door-open?-action blackboard)
             (inc-i-action blackboard)))
 
+(defn sequence-tree-3 [bb]
+  (let [f1 (fn [] (dosync (alter bb assoc :i 5)))
+        f2 (fn [i] (dosync (alter bb assoc :i (+ i (:i @bb)))))]
+    (sequence f1
+              #(f2 5))))
+
 (deftest sequence-test
   (let [blackboard (ref {:door-open true :i 0})
 	blackboard2 (ref {:door-open false :i 0})
+        blackboard3 (ref {:i 0})
 	tree-1 (sequence-tree-1 blackboard)
 	tree-2 (sequence-tree-2 blackboard2)
+        tree-3 (sequence-tree-3 blackboard3)
 	single (sequence (inc-i-action blackboard2))]
     (is (= 2  (do (run tree-1) (get-i blackboard))))
     (is (= 1  (do (run tree-2) (get-i blackboard2))))
-    (is (= 2  (do (run single) (get-i blackboard2))))))
+    (is (= 2  (do (run single) (get-i blackboard2))))
+    (is (= 10  (do (run tree-3) (get-i blackboard3))))))
 
 (defn non-deterministic-sequence-tree [blackboard]
   (non-deterministic-sequence (inc-i-action blackboard)
