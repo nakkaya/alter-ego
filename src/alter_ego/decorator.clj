@@ -10,8 +10,10 @@
   (with-meta {:children c} {:type :alter-ego.node-types/until-fail}))
 
 (defn- run-until-fail [children]
-  (if (run children)
-    (run-until-fail children) true))
+  (loop []
+    (if (run children)
+      (recur)
+      true)))
 
 (defmethod run :alter-ego.node-types/until-fail [d]
   (let [{children :children} d]
@@ -23,8 +25,10 @@
   (with-meta {:children c} {:type :alter-ego.node-types/until-success}))
 
 (defn- run-until-success [children]
-  (if (not (run children))
-    (run-until-success children) true))
+  (loop []
+    (if (not (run children))
+      (recur)
+      true)))
 
 (defmethod run :alter-ego.node-types/until-success [d]
   (let [{children :children} d]
