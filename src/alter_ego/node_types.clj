@@ -10,6 +10,7 @@
 (derive ::sequence ::composite)
 (derive ::non-deterministic-sequence ::composite)
 
+(derive ::forever ::decorator)
 (derive ::until-fail ::decorator)
 (derive ::until-success ::decorator)
 (derive ::limit ::decorator)

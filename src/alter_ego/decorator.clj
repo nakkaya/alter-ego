@@ -4,6 +4,18 @@
   (:use [alter-ego.node-types] :reload-all)
   (:use [alter-ego.composite] :reload-all))
 
+(defn forever
+  "When its child task finishes, it runs it once more."
+  [c]
+  (with-meta {:children c} {:type :alter-ego.node-types/repeat}))
+
+(defmethod run :alter-ego.node-types/forever [{children :children} & [terminate?]]
+  (loop []
+    (if (run-action? terminate?)
+      (do (run children terminate?)
+          (recur))
+      false)))
+
 (defn until-fail 
   "Runs its children until it returns false."
   [c]
@@ -98,10 +110,10 @@
     {:type :alter-ego.node-types/interrupter}))
 
 (defmethod run :alter-ego.node-types/interrupter
+  [{children :children watch :watch perform :perform} & [terminate?]]
   "Lets its child node run normally. If the child returns a result,
    it passes that result on up the tree. But, if the child is still working,
    and watcher returns a result it will terminate the child and return the result of perform."
-  [{children :children watch :watch perform :perform} & [terminate?]]
   (if (run-action? terminate?)
     (let [terminate-children? (if (nil? terminate?) (atom false) terminate?)
           terminate-watch? (atom false)
