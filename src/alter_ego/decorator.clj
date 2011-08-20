@@ -7,7 +7,7 @@
 (defn forever
   "When its child task finishes, it runs it once more."
   [c]
-  (with-meta {:children c} {:type :alter-ego.node-types/repeat}))
+  (with-meta {:children c} {:type :alter-ego.node-types/forever}))
 
 (defmethod run :alter-ego.node-types/forever [{children :children} & [terminate?]]
   (loop []
@@ -122,8 +122,8 @@
               (future-done? children) (do (terminate terminate-watch?)
                                           (deref children))
 
-              (and (boolean @watch)
-                   (future-done? watch))  (do (terminate terminate-children?)
-                                              (run perform))
+              (and (future-done? watch)
+                   (boolean @watch))  (do (terminate terminate-children?)
+                                          (run perform))
                    :default (recur))))
     false))
