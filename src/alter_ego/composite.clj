@@ -42,8 +42,8 @@
 (defn- select [children terminate?]
   (if (run-action? terminate?)
     (if-let[s (seq children)] 
-      (if-not (run (first s))
-        (select (rest s) terminate?)
+      (if-not (run (first s) terminate?)
+        (recur (rest s) terminate?)
         true))
     false))
 
@@ -69,10 +69,13 @@
   (with-meta {:children children} {:type :alter-ego.node-types/non-deterministic-sequence}))
 
 (defn- seq-run [children terminate?]
-  (if-let[s (seq children)] 
-    (if (and (run-action? terminate?)
-             (run (first s) terminate?))
-      (seq-run (rest s) terminate?) false)))
+  (if (run-action? terminate?)
+    (if-let [s (seq children)]
+      (if (run (first s) terminate?)
+        (recur (rest s) terminate?)
+        false)
+      true)
+    false))
 
 (defmethod run :alter-ego.node-types/sequence [{children :children} & [terminate?]]
   (if (not (false? (seq-run children terminate?))) true false))
