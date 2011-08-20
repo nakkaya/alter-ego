@@ -61,3 +61,20 @@
     (is (= false (run tree-2)))
     (is (= "2\n" (with-out-str (run tree-2))))
     (is (= "1\n" (with-out-str (run tree-1))))))
+
+(deftest inverter-test
+  (is (= "performtrue" (with-out-str
+                         (print
+                          (run
+                           (interrupter #(do  true)
+                                        (sequence #(do (Thread/sleep 3000) true)
+                                                  #(do (print "No Print") true))
+                                        #(do (print "perform") true)))))))
+
+  (is (= "performfalse" (with-out-str
+                          (print
+                           (run
+                            (interrupter #(do  true)
+                                         (sequence #(do (Thread/sleep 3000) true)
+                                                   #(do (print "No Print") true))
+                                         #(do (print "perform") false))))))))

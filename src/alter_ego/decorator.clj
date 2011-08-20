@@ -92,3 +92,26 @@
   (.read System/in)
   (run children terminate?))
 
+(defn interrupter
+  [w c p]
+  (with-meta {:children c :watch w :perform p}
+    {:type :alter-ego.node-types/interrupter}))
+
+(defmethod run :alter-ego.node-types/interrupter
+  [{children :children watch :watch perform :perform} & [terminate?]]
+  (if (run-action? terminate?)
+    (let [terminate? (if (nil? terminate?) (atom false) terminate?)
+          terminate? (atom false)
+          children (future (run children terminate?))
+          watch (future (run watch terminate?))]
+
+      (loop []
+        (Thread/sleep 50)
+        (cond (future-done? children)
+              (deref children)
+
+              (and (future-done? watch)
+                   (boolean @watch))  (do (swap! terminate? (fn [_] (identity true)))
+                                          (run perform))
+                   :default (recur))))
+    (run perform)))
