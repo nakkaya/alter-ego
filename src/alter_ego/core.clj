@@ -18,7 +18,6 @@
 	  (= t :until-success) (until-success nil)
 	  (= t :limit) (limit nil)
 	  (= t :inverter) (inverter nil)
-	  (= t :try-catch) (try-catch nil)
 	  (= t :print-blackboard) (print-blackboard blackboard nil)
 	  (= t :print-string) (print-string string nil)
 	  (= t :break-point) (break-point nil)

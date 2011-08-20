@@ -14,16 +14,21 @@
 (derive ::until-success ::decorator)
 (derive ::limit ::decorator)
 (derive ::inverter ::decorator)
-(derive ::try-catch ::decorator)
 (derive ::print-blackboard ::decorator)
 (derive ::print-string ::decorator)
 (derive ::break-point ::decorator)
+(derive ::interrupter ::composite)
 
 (defmulti run 
   "Given a node dispatch to its run implementation."
-  (fn [type] (if (fn? type)
-               :function
-               ((meta type) :type))))
+  (fn [node & [terminate?]]
+    (cond (fn? node) :function
+          :default ((meta node) :type))))
+
+(defn run-action? [terminate?]
+  (cond (nil? terminate?) true
+        (not @terminate?) true
+        :default false))
 
 (defmulti append-child
   "Given nodes parent and child, dispatch to correct append-child 
