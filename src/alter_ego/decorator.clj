@@ -98,6 +98,9 @@
     {:type :alter-ego.node-types/interrupter}))
 
 (defmethod run :alter-ego.node-types/interrupter
+  "Lets its child node run normally. If the child returns a result,
+   it passes that result on up the tree. But, if the child is still working,
+   and watcher returns a result it will terminate the child and return the result of perform."
   [{children :children watch :watch perform :perform} & [terminate?]]
   (if (run-action? terminate?)
     (let [terminate-children? (if (nil? terminate?) (atom false) terminate?)
