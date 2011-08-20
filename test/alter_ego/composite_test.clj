@@ -109,6 +109,28 @@
     (is (= false (run tree-2)))
     (is (= true (run single)))))
 
+(deftest parallel-sequence-test
+  (is (= false (run (parallel-sequence (sequence #(identity true))
+                                       (sequence #(identity true)))
+                    (atom true))))
+  (is (= 2 (let [a (atom 0)]
+             (run (parallel-sequence (sequence #(swap! a inc)
+                                               #(identity false))
+
+                                     (sequence #(swap! a inc)
+                                               #(do (Thread/sleep 250) true)
+                                               #(swap! a inc))))
+             @a)))
+
+  (is (= 3 (let [a (atom 0)]
+             (run (parallel-sequence (sequence #(swap! a inc)
+                                               #(identity true))
+
+                                     (sequence #(swap! a inc)
+                                               #(do (Thread/sleep 250) true)
+                                               #(swap! a inc))))
+             @a))))
+
 (defn sample-tree [blackboard]
   (selector (sequence (door-open?-action blackboard)
                       (to-room-action blackboard))

@@ -44,7 +44,8 @@
     (if-let[s (seq children)] 
       (if-not (run (first s) terminate?)
         (recur (rest s) terminate?)
-        true))
+        true)
+      false)
     false))
 
 (defmethod run :alter-ego.node-types/selector [{children :children} & [terminate?]]
@@ -68,6 +69,12 @@
   [& children]
   (with-meta {:children children} {:type :alter-ego.node-types/non-deterministic-sequence}))
 
+(defn parallel-sequence
+  [& children]
+  "Concurrently executes all its children. Parallel fails if one child fails;
+   if all succeed, then the parallel succeed."
+  (with-meta {:children children} {:type :alter-ego.node-types/parallel-sequence}))
+
 (defn- seq-run [children terminate?]
   (if (run-action? terminate?)
     (if-let [s (seq children)]
@@ -82,3 +89,28 @@
 
 (defmethod run :alter-ego.node-types/non-deterministic-sequence [{children :children} & [terminate?]]
   (if (not (false? (seq-run (shuffle children) terminate?))) true false))
+
+(defn- all-futures-succeded? [fs]
+  (and (every? true? (map future-done? fs))
+       (every? true? (map deref fs))))
+
+(defn- any-futures-failed? [fs]
+  (some false? (map deref (filter future-done? fs))))
+
+(defn- terminate-and-return [fs atom return]
+  (terminate atom)
+  (doall (map deref fs))
+  return)
+
+(defmethod run :alter-ego.node-types/parallel-sequence [{children :children} & [terminate?]]
+  (if (run-action? terminate?)
+    (let [parent-terminate? terminate?
+          self-terminate? (atom false)
+          fs (map #(future (run % self-terminate?)) children)]
+      (loop []
+        (Thread/sleep 50)
+        (cond (not (run-action? parent-terminate?)) (terminate-and-return fs self-terminate? false)
+              (all-futures-succeded? fs) true
+              (any-futures-failed? fs)  (terminate-and-return fs self-terminate? false)
+              :default (recur))))
+    false))
