@@ -30,6 +30,9 @@
         (not @terminate?) true
         :default false))
 
+(defn terminate [a]
+  (swap! a (fn [_] (identity true))))
+
 (defmulti append-child
   "Given nodes parent and child, dispatch to correct append-child 
    implementation."

@@ -100,18 +100,18 @@
 (defmethod run :alter-ego.node-types/interrupter
   [{children :children watch :watch perform :perform} & [terminate?]]
   (if (run-action? terminate?)
-    (let [terminate? (if (nil? terminate?) (atom false) terminate?)
-          terminate? (atom false)
-          children (future (run children terminate?))
-          watch (future (run watch terminate?))]
+    (let [terminate-children? (if (nil? terminate?) (atom false) terminate?)
+          terminate-watch? (atom false)
+          children (future (run children terminate-children?))
+          watch (future (run watch terminate-watch?))]
 
       (loop []
         (Thread/sleep 50)
-        (cond (future-done? children)
-              (deref children)
+        (cond (future-done? children) (do (terminate terminate-watch?)
+                                          (deref children))
 
-              (and (future-done? watch)
-                   (boolean @watch))  (do (swap! terminate? (fn [_] (identity true)))
-                                          (run perform))
+              (and (boolean @watch)
+                   (future-done? watch))  (do (terminate terminate-children?)
+                                              (run perform))
                    :default (recur))))
     (run perform)))
