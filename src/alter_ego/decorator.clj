@@ -21,46 +21,38 @@
   [c]
   (with-meta {:children c} {:type :alter-ego.node-types/until-fail}))
 
-(defn- run-until-fail [children terminate?]
+(defmethod run :alter-ego.node-types/until-fail [{children :children} & [terminate?]]
   (loop []
     (if (and (run-action? terminate?)
              (run children terminate?))
       (recur)
       true)))
 
-(defmethod run :alter-ego.node-types/until-fail [{children :children} & [terminate?]]
-  (run-until-fail children terminate?))
-
 (defn until-success
   "Runs its children until it returns true."
   [c]
   (with-meta {:children c} {:type :alter-ego.node-types/until-success}))
 
-(defn- run-until-success [children terminate?]
+(defmethod run :alter-ego.node-types/until-success [{children :children} & [terminate?]]
   (loop []
     (if (and (run-action? terminate?)
              (not (run children terminate?)))
       (recur)
       true)))
 
-(defmethod run :alter-ego.node-types/until-success [{children :children} & [terminate?]]
-  (run-until-success children terminate?))
-
 (defn limit 
   "Unless its children succeeds will keep running it at most i times."
   [c i]
   (with-meta {:children c :times i} {:type :alter-ego.node-types/limit}))
 
-(defn- run-limit [children times terminate?]
-  (if (and (pos? times)
-           (run-action? terminate?))
-    (if (not (run children terminate?)) 
-      (run-limit children (dec times) terminate?)
-      true)
-    false))
-
 (defmethod run :alter-ego.node-types/limit [{children :children times :times} & [terminate?]]
-  (run-limit children times terminate?))
+  (loop [i times]
+    (if (and (pos? i)
+             (run-action? terminate?))
+      (if (not (run children terminate?)) 
+        (recur (dec i))
+        true)
+      false)))
 
 (defn inverter 
   "Inverts its childrens return value, succees becames failure and 
