@@ -98,27 +98,32 @@
 
 (defn interrupter
   [w c p]
+  "Lets its child node run normally. If the child returns a result,
+   it passes that result on up the tree. But, if the child is still working,
+   and watcher returns a result it will terminate the child and return the result of perform."
   (with-meta {:children c :watch w :perform p}
     {:type :alter-ego.node-types/interrupter}))
 
 (defmethod run :alter-ego.node-types/interrupter
   [{children :children watch :watch perform :perform} & [terminate?]]
-  "Lets its child node run normally. If the child returns a result,
-   it passes that result on up the tree. But, if the child is still working,
-   and watcher returns a result it will terminate the child and return the result of perform."
   (if (run-action? terminate?)
-    (let [terminate-children? (if (nil? terminate?) (atom false) terminate?)
+    (let [parent-terminate? terminate?
+          terminate-children? (atom false)
           terminate-watch? (atom false)
           children (future (run children terminate-children?))
           watch (future (run watch terminate-watch?))]
 
       (loop []
         (Thread/sleep 50)
-        (cond (future-done? children) (do (terminate terminate-watch?)
+        (cond (not (run-action? parent-terminate?)) (do (terminate terminate-children?)
+                                                        (run perform)
+                                                        false)
+              
+              (future-done? children) (do (terminate terminate-watch?)
                                           (deref children))
 
               (and (boolean @watch)
                    (future-done? watch))  (do (terminate terminate-children?)
                                               (run perform))
                    :default (recur))))
-    (run perform)))
+    false))

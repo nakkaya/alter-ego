@@ -8,6 +8,7 @@
 (derive ::selector ::composite)
 (derive ::non-deterministic-selector ::composite)
 (derive ::sequence ::composite)
+(derive ::parallel-sequence ::composite)
 (derive ::non-deterministic-sequence ::composite)
 
 (derive ::forever ::decorator)

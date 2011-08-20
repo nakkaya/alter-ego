@@ -63,18 +63,15 @@
     (is (= "1\n" (with-out-str (run tree-1))))))
 
 (deftest inverter-test
-  (is (= "performtrue" (with-out-str
-                         (print
-                          (run
-                           (interrupter #(do  true)
-                                        (sequence #(do (Thread/sleep 3000) true)
-                                                  #(do (print "No Print") true))
-                                        #(do (print "perform") true)))))))
+  (is (= 2 (let [a (atom 0)]
+             (run
+              (interrupter #(swap! a inc)
+                           (sequence #(do (Thread/sleep 500) true)
+                                     #(swap! a inc))
+                           #(swap! a inc)))
+             @a)))
 
-  (is (= "performfalse" (with-out-str
-                          (print
-                           (run
-                            (interrupter #(do  true)
-                                         (sequence #(do (Thread/sleep 3000) true)
-                                                   #(do (print "No Print") true))
-                                         #(do (print "perform") false))))))))
+  (is (= false (run
+                (interrupter #(do  true)
+                             (sequence #(do (Thread/sleep 500) true))
+                             #(identity false))))))
