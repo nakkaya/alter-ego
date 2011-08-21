@@ -5,7 +5,7 @@
   "Given a node dispatch to its run implementation."
   (fn [node & [terminate?]]
     (cond (fn? node) :function
-          :default ((meta node) :type))))
+          :default (node :type))))
 
 (defn run-action? [terminate?]
   (cond (nil? terminate?) true
@@ -14,9 +14,3 @@
 
 (defn terminate [a]
   (swap! a (fn [_] (identity true))))
-
-;; (defmulti append-child
-;;   "Given nodes parent and child, dispatch to correct append-child 
-;;    implementation."
-;;   (fn [parent child] [((meta parent) :type) 
-;; 		      ((meta child) :type)]))

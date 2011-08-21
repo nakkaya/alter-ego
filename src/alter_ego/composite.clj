@@ -14,8 +14,7 @@
 (defn action 
   "This node wraps a function call with blackboard as its argument."
   [symbol blackboard]
-  (with-meta {:symbol symbol :blackboard blackboard} 
-    {:type :action}))
+  {:type :action :symbol symbol :blackboard blackboard})
 
 (defmethod run :action
   [{symbol :symbol blackboard :blackboard} & [terminate?]]
@@ -31,13 +30,12 @@
   "Tries to run all its children in sequence as soon as one succeeds 
    it also succeeds."
   [& children]
-  (with-meta {:children children} {:type :selector}))
+  {:type :selector :children children})
 
 (defn non-deterministic-selector 
   "Same as selector, but shuffles all its children prior to execution."
   [& children]
-  (with-meta {:children children} 
-    {:type :non-deterministic-selector}))
+  {:type :non-deterministic-selector :children children})
 
 (defn- select [children terminate?]
   (if (run-action? terminate?)
@@ -62,18 +60,18 @@
   "Runs all of its children in sequential order. If one of them fails, 
    it also fails. Once all of them succeeds, it also succeeds."
   [& children]
-  (with-meta {:children children} {:type :sequence}))
+  {:type :sequence :children children})
 
 (defn non-deterministic-sequence 
   "Same as sequence, but shuffles all its children prior to execution."
   [& children]
-  (with-meta {:children children} {:type :non-deterministic-sequence}))
+  {:type :non-deterministic-sequence :children children})
 
 (defn parallel-sequence
   [& children]
   "Concurrently executes all its children. Parallel fails if one child fails;
    if all succeed, then the parallel succeed."
-  (with-meta {:children children} {:type :parallel-sequence}))
+  {:type :parallel-sequence :children children})
 
 (defn- seq-run [children terminate?]
   (if (run-action? terminate?)

@@ -7,7 +7,7 @@
 (defn forever
   "When its child task finishes, it runs it once more."
   [c]
-  (with-meta {:children c} {:type :forever}))
+  {:type :forever :children c})
 
 (defmethod run :forever [{children :children} & [terminate?]]
   (loop []
@@ -19,7 +19,7 @@
 (defn until-fail 
   "Runs its children until it returns false."
   [c]
-  (with-meta {:children c} {:type :until-fail}))
+  {:type :until-fail :children c})
 
 (defmethod run :until-fail [{children :children} & [terminate?]]
   (loop []
@@ -31,7 +31,7 @@
 (defn until-success
   "Runs its children until it returns true."
   [c]
-  (with-meta {:children c} {:type :until-success}))
+  {:type :until-success :children c})
 
 (defmethod run :until-success [{children :children} & [terminate?]]
   (loop []
@@ -43,7 +43,7 @@
 (defn limit 
   "Unless its children succeeds will keep running it at most i times."
   [c i]
-  (with-meta {:children c :times i} {:type :limit}))
+  {:type :limit :children c :times i})
 
 (defmethod run :limit [{children :children times :times} & [terminate?]]
   (loop [i times]
@@ -58,7 +58,7 @@
   "Inverts its childrens return value, succees becames failure and 
    vice versa."
   [c]
-  (with-meta {:children c} {:type :inverter}))
+  {:type :inverter :children c})
 
 (defmethod run :inverter [{children :children} & [terminate?]]
   (not (run children terminate?)))
@@ -66,8 +66,7 @@
 (defn print-blackboard
   "Print the content of the blackboard"
   [b c]
-  (with-meta {:blackboard b :children c} 
-    {:type :print-blackboard}))
+  {:type :print-blackboard :blackboard b :children c} )
 
 (defmethod run :print-blackboard
   [{children :children blackboard :blackboard} & [terminate?]]
@@ -78,8 +77,7 @@
 (defn print-string
   "Print a debug message."
   [s c]
-  (with-meta {:string s :children c} 
-    {:type :print-string}))
+  {:type :print-string :string s :children c})
 
 (defmethod run :print-string [{children :children string :string} & [terminate?]]
   (println string)
@@ -88,8 +86,7 @@
 (defn break-point
   "Insert a debug breakpoint."
   [s c]
-  (with-meta {:children c} 
-    {:type :break-point}))
+  {:type :break-point :children c})
 
 (defmethod run :break-point [{children :children} & [terminate?]]
   (println "Press Enter to resume execution...")
@@ -101,8 +98,7 @@
   "Lets its child node run normally. If the child returns a result,
    it passes that result on up the tree. But, if the child is still working,
    and watcher returns a result it will terminate the child and return the result of perform."
-  (with-meta {:children c :watch w :perform p}
-    {:type :interrupter}))
+  {:type :interrupter :children c :watch w :perform p})
 
 (defmethod run :interrupter
   [{children :children watch :watch perform :perform} & [terminate?]]
