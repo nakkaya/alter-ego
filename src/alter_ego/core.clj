@@ -23,15 +23,8 @@
 	  (= t :break-point) (break-point nil)
 	  :default (throw (Exception. "Unknown node type.")))))
 
-(defmethod append-child [:alter-ego.node-types/composite 
-			 :alter-ego.node-types/type] 
-  [p c]
+(defn- append-child [p c]
   (assoc p :children (reverse (conj (reverse (:children p)) c))))
-
-(defmethod append-child [:alter-ego.node-types/decorator
-			 :alter-ego.node-types/type] 
-  [p c]
-  (assoc p :children c))
 
 (defn load-tree 
   "Load tree definition."

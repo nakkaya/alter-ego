@@ -7,9 +7,9 @@
 (defn forever
   "When its child task finishes, it runs it once more."
   [c]
-  (with-meta {:children c} {:type :alter-ego.node-types/forever}))
+  (with-meta {:children c} {:type :forever}))
 
-(defmethod run :alter-ego.node-types/forever [{children :children} & [terminate?]]
+(defmethod run :forever [{children :children} & [terminate?]]
   (loop []
     (if (run-action? terminate?)
       (do (run children terminate?)
@@ -19,9 +19,9 @@
 (defn until-fail 
   "Runs its children until it returns false."
   [c]
-  (with-meta {:children c} {:type :alter-ego.node-types/until-fail}))
+  (with-meta {:children c} {:type :until-fail}))
 
-(defmethod run :alter-ego.node-types/until-fail [{children :children} & [terminate?]]
+(defmethod run :until-fail [{children :children} & [terminate?]]
   (loop []
     (if (and (run-action? terminate?)
              (run children terminate?))
@@ -31,9 +31,9 @@
 (defn until-success
   "Runs its children until it returns true."
   [c]
-  (with-meta {:children c} {:type :alter-ego.node-types/until-success}))
+  (with-meta {:children c} {:type :until-success}))
 
-(defmethod run :alter-ego.node-types/until-success [{children :children} & [terminate?]]
+(defmethod run :until-success [{children :children} & [terminate?]]
   (loop []
     (if (and (run-action? terminate?)
              (not (run children terminate?)))
@@ -43,9 +43,9 @@
 (defn limit 
   "Unless its children succeeds will keep running it at most i times."
   [c i]
-  (with-meta {:children c :times i} {:type :alter-ego.node-types/limit}))
+  (with-meta {:children c :times i} {:type :limit}))
 
-(defmethod run :alter-ego.node-types/limit [{children :children times :times} & [terminate?]]
+(defmethod run :limit [{children :children times :times} & [terminate?]]
   (loop [i times]
     (if (and (pos? i)
              (run-action? terminate?))
@@ -58,18 +58,18 @@
   "Inverts its childrens return value, succees becames failure and 
    vice versa."
   [c]
-  (with-meta {:children c} {:type :alter-ego.node-types/inverter}))
+  (with-meta {:children c} {:type :inverter}))
 
-(defmethod run :alter-ego.node-types/inverter [{children :children} & [terminate?]]
+(defmethod run :inverter [{children :children} & [terminate?]]
   (not (run children terminate?)))
 
 (defn print-blackboard
   "Print the content of the blackboard"
   [b c]
   (with-meta {:blackboard b :children c} 
-    {:type :alter-ego.node-types/print-blackboard}))
+    {:type :print-blackboard}))
 
-(defmethod run :alter-ego.node-types/print-blackboard
+(defmethod run :print-blackboard
   [{children :children blackboard :blackboard} & [terminate?]]
   (doseq [[key val] @blackboard]
     (println key " ==> " val))
@@ -79,9 +79,9 @@
   "Print a debug message."
   [s c]
   (with-meta {:string s :children c} 
-    {:type :alter-ego.node-types/print-string}))
+    {:type :print-string}))
 
-(defmethod run :alter-ego.node-types/print-string [{children :children string :string} & [terminate?]]
+(defmethod run :print-string [{children :children string :string} & [terminate?]]
   (println string)
   (run children terminate?))
 
@@ -89,9 +89,9 @@
   "Insert a debug breakpoint."
   [s c]
   (with-meta {:children c} 
-    {:type :alter-ego.node-types/break-point}))
+    {:type :break-point}))
 
-(defmethod run :alter-ego.node-types/break-point [{children :children} & [terminate?]]
+(defmethod run :break-point [{children :children} & [terminate?]]
   (println "Press Enter to resume execution...")
   (.read System/in)
   (run children terminate?))
@@ -102,9 +102,9 @@
    it passes that result on up the tree. But, if the child is still working,
    and watcher returns a result it will terminate the child and return the result of perform."
   (with-meta {:children c :watch w :perform p}
-    {:type :alter-ego.node-types/interrupter}))
+    {:type :interrupter}))
 
-(defmethod run :alter-ego.node-types/interrupter
+(defmethod run :interrupter
   [{children :children watch :watch perform :perform} & [terminate?]]
   (if (run-action? terminate?)
     (let [parent-terminate? terminate?

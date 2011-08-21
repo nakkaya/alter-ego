@@ -15,9 +15,9 @@
   "This node wraps a function call with blackboard as its argument."
   [symbol blackboard]
   (with-meta {:symbol symbol :blackboard blackboard} 
-    {:type :alter-ego.node-types/action}))
+    {:type :action}))
 
-(defmethod run :alter-ego.node-types/action
+(defmethod run :action
   [{symbol :symbol blackboard :blackboard} & [terminate?]]
   (if (run-action? terminate?)
     (boolean ((resolve symbol) blackboard))
@@ -31,13 +31,13 @@
   "Tries to run all its children in sequence as soon as one succeeds 
    it also succeeds."
   [& children]
-  (with-meta {:children children} {:type :alter-ego.node-types/selector}))
+  (with-meta {:children children} {:type :selector}))
 
 (defn non-deterministic-selector 
   "Same as selector, but shuffles all its children prior to execution."
   [& children]
   (with-meta {:children children} 
-    {:type :alter-ego.node-types/non-deterministic-selector}))
+    {:type :non-deterministic-selector}))
 
 (defn- select [children terminate?]
   (if (run-action? terminate?)
@@ -48,10 +48,10 @@
       false)
     false))
 
-(defmethod run :alter-ego.node-types/selector [{children :children} & [terminate?]]
+(defmethod run :selector [{children :children} & [terminate?]]
   (if (not (true? (select children terminate?))) false true))
 
-(defmethod run :alter-ego.node-types/non-deterministic-selector [{children :children} & [terminate?]]
+(defmethod run :non-deterministic-selector [{children :children} & [terminate?]]
   (if (not (true? (select (shuffle children) terminate?))) false true))
 
 ;;
@@ -62,18 +62,18 @@
   "Runs all of its children in sequential order. If one of them fails, 
    it also fails. Once all of them succeeds, it also succeeds."
   [& children]
-  (with-meta {:children children} {:type :alter-ego.node-types/sequence}))
+  (with-meta {:children children} {:type :sequence}))
 
 (defn non-deterministic-sequence 
   "Same as sequence, but shuffles all its children prior to execution."
   [& children]
-  (with-meta {:children children} {:type :alter-ego.node-types/non-deterministic-sequence}))
+  (with-meta {:children children} {:type :non-deterministic-sequence}))
 
 (defn parallel-sequence
   [& children]
   "Concurrently executes all its children. Parallel fails if one child fails;
    if all succeed, then the parallel succeed."
-  (with-meta {:children children} {:type :alter-ego.node-types/parallel-sequence}))
+  (with-meta {:children children} {:type :parallel-sequence}))
 
 (defn- seq-run [children terminate?]
   (if (run-action? terminate?)
@@ -84,10 +84,10 @@
       true)
     false))
 
-(defmethod run :alter-ego.node-types/sequence [{children :children} & [terminate?]]
+(defmethod run :sequence [{children :children} & [terminate?]]
   (if (not (false? (seq-run children terminate?))) true false))
 
-(defmethod run :alter-ego.node-types/non-deterministic-sequence [{children :children} & [terminate?]]
+(defmethod run :non-deterministic-sequence [{children :children} & [terminate?]]
   (if (not (false? (seq-run (shuffle children) terminate?))) true false))
 
 (defn- all-futures-succeded? [fs]
@@ -102,7 +102,7 @@
   (doall (map deref fs))
   return)
 
-(defmethod run :alter-ego.node-types/parallel-sequence [{children :children} & [terminate?]]
+(defmethod run :parallel-sequence [{children :children} & [terminate?]]
   (if (run-action? terminate?)
     (let [parent-terminate? terminate?
           self-terminate? (atom false)
