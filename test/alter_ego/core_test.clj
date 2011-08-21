@@ -6,11 +6,11 @@
 
 (deftest action-test
   (let [board (ref {:i 0})]
-    (is (= 1 (do (run (inc-i-action board)) (:i @board))))
-    (is (= true (run (inc-i-action board))))
-    (is (= 5 (do (run (fn []
-                        (dosync (alter board assoc :i 5)))) (:i @board))))
-    (is (= true (run (fn []
+    (is (= 1 (do (exec (inc-i-action board)) (:i @board))))
+    (is (= true (exec (inc-i-action board))))
+    (is (= 5 (do (exec (fn []
+                         (dosync (alter board assoc :i 5)))) (:i @board))))
+    (is (= true (exec (fn []
                         (dosync (alter board assoc :i 5))))))))
 
 (defn selector-tree-1 [blackboard]
@@ -33,11 +33,11 @@
 	tree-2 (selector-tree-2 blackboard)
 	tree-3 (selector-tree-3 blackboard2)
 	single (selector (inc-i-action blackboard2))]
-    (is (= 0 (do (run tree-1) (get-i blackboard))))
-    (is (= 1 (do (run tree-2) (get-i blackboard))))
-    (is (= 1 (do (run tree-3) (get-i blackboard2))))
-    (is (= true (run single)))
-    (is (= 3 (do (run tree-3) (get-i blackboard2))))))
+    (is (= 0 (do (exec tree-1) (get-i blackboard))))
+    (is (= 1 (do (exec tree-2) (get-i blackboard))))
+    (is (= 1 (do (exec tree-3) (get-i blackboard2))))
+    (is (= true (exec single)))
+    (is (= 3 (do (exec tree-3) (get-i blackboard2))))))
 
 (defn non-deterministic-selector-tree [blackboard]
   (non-deterministic-selector (inc-i-action blackboard)
@@ -47,10 +47,10 @@
   (let [blackboard (ref {:i 0})
 	tree (non-deterministic-selector-tree blackboard)
 	single (non-deterministic-selector (inc-i-action blackboard))]
-    (is (= 1 (do (run tree) (get-i blackboard))))
-    (is (= true (run tree)))
-    (is (= 3 (do (run single) (get-i blackboard))))
-    (is (= true (run single)))))
+    (is (= 1 (do (exec tree) (get-i blackboard))))
+    (is (= true (exec tree)))
+    (is (= 3 (do (exec single) (get-i blackboard))))
+    (is (= true (exec single)))))
 
 (defn sequence-tree-1 [blackboard]
   (sequence (door-open?-action blackboard)
@@ -76,10 +76,10 @@
 	tree-2 (sequence-tree-2 blackboard2)
         tree-3 (sequence-tree-3 blackboard3)
 	single (sequence (inc-i-action blackboard2))]
-    (is (= 2  (do (run tree-1) (get-i blackboard))))
-    (is (= 1  (do (run tree-2) (get-i blackboard2))))
-    (is (= 2  (do (run single) (get-i blackboard2))))
-    (is (= 10  (do (run tree-3) (get-i blackboard3))))))
+    (is (= 2  (do (exec tree-1) (get-i blackboard))))
+    (is (= 1  (do (exec tree-2) (get-i blackboard2))))
+    (is (= 2  (do (exec single) (get-i blackboard2))))
+    (is (= 10  (do (exec tree-3) (get-i blackboard3))))))
 
 (defn non-deterministic-sequence-tree [blackboard]
   (non-deterministic-sequence (inc-i-action blackboard)
@@ -89,10 +89,10 @@
   (let [blackboard (ref {:i 0})
 	tree (non-deterministic-sequence-tree blackboard)
 	single (non-deterministic-sequence (inc-i-action blackboard))]
-    (is (= 2 (do (run tree) (get-i blackboard))))
-    (is (= true (run tree)))
-    (is (= 5 (do (run single) (get-i blackboard))))
-    (is (= true (run single)))))
+    (is (= 2 (do (exec tree) (get-i blackboard))))
+    (is (= true (exec tree)))
+    (is (= 5 (do (exec single) (get-i blackboard))))
+    (is (= true (exec single)))))
 
 (defn seq-return-tree [blackboard]
   (sequence (inc-i-action blackboard)
@@ -104,30 +104,30 @@
 	tree-1 (seq-return-tree blackboard)
 	tree-2 (seq-return-tree blackboard2)
 	single (sequence (inc-i-action blackboard2))]
-    (is (= true (run tree-1)))
-    (is (= false (run tree-2)))
-    (is (= true (run single)))))
+    (is (= true (exec tree-1)))
+    (is (= false (exec tree-2)))
+    (is (= true (exec single)))))
 
 (deftest parallel-sequence-test
-  (is (= false (run (parallel-sequence (sequence #(identity true))
-                                       (sequence #(identity true)))
-                    (atom true))))
+  (is (= false (exec (parallel-sequence (sequence #(identity true))
+                                        (sequence #(identity true)))
+                     (atom true))))
   (is (= 2 (let [a (atom 0)]
-             (run (parallel-sequence (sequence #(swap! a inc)
-                                               #(identity false))
+             (exec (parallel-sequence (sequence #(swap! a inc)
+                                                #(identity false))
 
-                                     (sequence #(swap! a inc)
-                                               #(do (Thread/sleep 250) true)
-                                               #(swap! a inc))))
+                                      (sequence #(swap! a inc)
+                                                #(do (Thread/sleep 250) true)
+                                                #(swap! a inc))))
              @a)))
 
   (is (= 3 (let [a (atom 0)]
-             (run (parallel-sequence (sequence #(swap! a inc)
-                                               #(identity true))
+             (exec (parallel-sequence (sequence #(swap! a inc)
+                                                #(identity true))
 
-                                     (sequence #(swap! a inc)
-                                               #(do (Thread/sleep 250) true)
-                                               #(swap! a inc))))
+                                      (sequence #(swap! a inc)
+                                                #(do (Thread/sleep 250) true)
+                                                #(swap! a inc))))
              @a))))
 
 (defn sample-tree [blackboard]
@@ -142,10 +142,10 @@
 	blackboard2 (ref {:door-open false})
 	tree-1 (sample-tree blackboard)
 	tree-2 (sample-tree blackboard2)]
-    (is (= true (do (run tree-1) (:to-room @blackboard))))
-    (is (= true (do (run tree-2) (:to-door @blackboard2))))
-    (is (= true (do (run tree-2) (:open-door @blackboard2))))
-    (is (= true (do (run tree-2) (:to-room @blackboard2))))))
+    (is (= true (do (exec tree-1) (:to-room @blackboard))))
+    (is (= true (do (exec tree-2) (:to-door @blackboard2))))
+    (is (= true (do (exec tree-2) (:open-door @blackboard2))))
+    (is (= true (do (exec tree-2) (:to-room @blackboard2))))))
 
 (defn until-fail-tree [blackboard]
   (until-fail (sequence (inc-i-action blackboard)
@@ -154,8 +154,8 @@
 (deftest until-fail-test
   (let [blackboard (ref {:i 0})
 	tree-1 (until-fail-tree blackboard)]
-    (is (= 5 (do (run tree-1) (:i @blackboard))))
-    (is (= true (run tree-1)))))
+    (is (= 5 (do (exec tree-1) (:i @blackboard))))
+    (is (= true (exec tree-1)))))
 
 (defn until-success-tree [blackboard]
   (until-success (sequence (dec-i-action blackboard)
@@ -164,8 +164,8 @@
 (deftest until-success-test
   (let [blackboard (ref {:i 10})
 	tree-1 (until-success-tree blackboard)]
-    (is (= 4 (do (run tree-1) (:i @blackboard))))
-    (is (= true (run tree-1)))))
+    (is (= 4 (do (exec tree-1) (:i @blackboard))))
+    (is (= true (exec tree-1)))))
 
 (defn limit-tree [blackboard]
   (limit (sequence (inc-i-action blackboard)
@@ -175,44 +175,44 @@
   (let [blackboard (ref {:i 6})
 	tree (limit-tree blackboard)
 	single (limit (inc-i-action blackboard) 3)]
-    (is (= 9 (do (run tree) (:i @blackboard))))
-    (is (= false (run tree)))
-    (is (= true (run single)))))
+    (is (= 9 (do (exec tree) (:i @blackboard))))
+    (is (= false (exec tree)))
+    (is (= true (exec single)))))
 
 (deftest inverter-test
   (let [tree-1 (inverter (small?-action (ref {:i 6})))
 	tree-2 (inverter (small?-action (ref {:i 0})))]
-    (is (= true (run tree-1)))
-    (is (= false (run tree-2)))))
+    (is (= true (exec tree-1)))
+    (is (= false (exec tree-2)))))
 
 (deftest print-blackboard-test
   (let [bb1 (ref {:i 0})
 	tree-1 (print-blackboard bb1 (small?-action bb1))
 	bb2 (ref {:i 6})
 	tree-2 (print-blackboard bb2 (small?-action bb2))]
-    (is (= true (run tree-1)))
-    (is (= false (run tree-2)))
-    (is (= ":i  ==>  6\n" (with-out-str (run tree-2))))
-    (is (= ":i  ==>  0\n" (with-out-str (run tree-1))))))
+    (is (= true (exec tree-1)))
+    (is (= false (exec tree-2)))
+    (is (= ":i  ==>  6\n" (with-out-str (exec tree-2))))
+    (is (= ":i  ==>  0\n" (with-out-str (exec tree-1))))))
 
 (deftest print-string-test
   (let [tree-1 (print-string "1" (small?-action (ref {:i 0})))
 	tree-2 (print-string "2" (small?-action (ref {:i 6})))]
-    (is (= true (run tree-1)))
-    (is (= false (run tree-2)))
-    (is (= "2\n" (with-out-str (run tree-2))))
-    (is (= "1\n" (with-out-str (run tree-1))))))
+    (is (= true (exec tree-1)))
+    (is (= false (exec tree-2)))
+    (is (= "2\n" (with-out-str (exec tree-2))))
+    (is (= "1\n" (with-out-str (exec tree-1))))))
 
 (deftest inverter-test
   (is (= 2 (let [a (atom 0)]
-             (run
+             (exec
               (interrupter #(swap! a inc)
                            (sequence #(do (Thread/sleep 500) true)
                                      #(swap! a inc))
                            #(swap! a inc)))
              @a)))
 
-  (is (= false (run
+  (is (= false (exec
                 (interrupter #(do  true)
                              (sequence #(do (Thread/sleep 500) true))
                              #(identity false))))))
@@ -223,26 +223,26 @@
      ~@tests))
 
 (def sample-saved-tree
-     [{:type :selector :name "Root"}
-      [{:type :sequence :name "Open Door"}
-       [{:type :action :name "Door Open?" :function 'alter-ego.sample-actions/door-open?}]
-       [{:type :action :name "Move" :function 'alter-ego.sample-actions/to-room}]]
-      [{:type :sequence :name "Closed Door"}
-       [{:type :action :name "Move" :function 'alter-ego.sample-actions/to-door}]
-       [{:type :action :name "Open Door" :function 'alter-ego.sample-actions/open-door}]
-       [{:type :until-fail :name "Until Fail"}
-        [{:type :action :name "Move" :function 'alter-ego.sample-actions/to-room}]]]
-      
-      [{:type :sequence :name "Fire Tree"}
-       [{:type :sequence :name "Until Dead"}
-        [{:type :action :name "Move" :function 'move :status :disabled}]
-        [{:type :action :name "Fire" :function 'alter-ego.sample-actions/to-room}]]]
+  [{:type :selector :name "Root"}
+   [{:type :sequence :name "Open Door"}
+    [{:type :action :name "Door Open?" :function 'alter-ego.sample-actions/door-open?}]
+    [{:type :action :name "Move" :function 'alter-ego.sample-actions/to-room}]]
+   [{:type :sequence :name "Closed Door"}
+    [{:type :action :name "Move" :function 'alter-ego.sample-actions/to-door}]
+    [{:type :action :name "Open Door" :function 'alter-ego.sample-actions/open-door}]
+    [{:type :until-fail :name "Until Fail"}
+     [{:type :action :name "Move" :function 'alter-ego.sample-actions/to-room}]]]
+   
+   [{:type :sequence :name "Fire Tree"}
+    [{:type :sequence :name "Until Dead"}
+     [{:type :action :name "Move" :function 'move :status :disabled}]
+     [{:type :action :name "Fire" :function 'alter-ego.sample-actions/to-room}]]]
 
-      [{:type :sequence :name "Closed Door" :status :disabled}
-       [{:type :action :name "Move" :function 'move}]
-       [{:type :action :name "Open Door" :function 'open}]
-       [{:type :until-fail :name "Until Fail"}
-        [{:type :action :name "Move" :function 'move}]]]])
+   [{:type :sequence :name "Closed Door" :status :disabled}
+    [{:type :action :name "Move" :function 'move}]
+    [{:type :action :name "Open Door" :function 'open}]
+    [{:type :until-fail :name "Until Fail"}
+     [{:type :action :name "Move" :function 'move}]]]])
 
 (with-private-fns [alter-ego.core [node]]
   (deftest load-test

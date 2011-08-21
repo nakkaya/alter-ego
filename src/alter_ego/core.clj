@@ -2,26 +2,26 @@
   alter-ego.core
   (:refer-clojure :exclude [sequence]))
 
-(defmulti run 
-  "Given a node dispatch to its run implementation."
+(defmulti exec 
+  "Given a node dispatch to its exec implementation."
   (fn [node & [terminate?]]
     (cond (fn? node) :function
           :default (node :type))))
 
-(defn run-action? [terminate?]
+(defn- exec-action? [terminate?]
   (cond (nil? terminate?) true
         (not @terminate?) true
         :default false))
 
-(defn terminate [a]
+(defn- terminate [a]
   (swap! a (fn [_] (identity true))))
 
 ;;
 ;; Leafs
 ;;
 
-(defmethod run :function [f & [terminate?]]
-  (if (run-action? terminate?)
+(defmethod exec :function [f & [terminate?]]
+  (if (exec-action? terminate?)
     (boolean (f)) false))
 
 (defn action 
@@ -29,9 +29,9 @@
   [symbol blackboard]
   {:type :action :symbol symbol :blackboard blackboard})
 
-(defmethod run :action
+(defmethod exec :action
   [{symbol :symbol blackboard :blackboard} & [terminate?]]
-  (if (run-action? terminate?)
+  (if (exec-action? terminate?)
     (boolean ((resolve symbol) blackboard))
     false))
 
@@ -51,18 +51,18 @@
   {:type :non-deterministic-selector :children children})
 
 (defn- select [children terminate?]
-  (if (run-action? terminate?)
+  (if (exec-action? terminate?)
     (if-let[s (seq children)] 
-      (if-not (run (first s) terminate?)
+      (if-not (exec (first s) terminate?)
         (recur (rest s) terminate?)
         true)
       false)
     false))
 
-(defmethod run :selector [{children :children} & [terminate?]]
+(defmethod exec :selector [{children :children} & [terminate?]]
   (if (not (true? (select children terminate?))) false true))
 
-(defmethod run :non-deterministic-selector [{children :children} & [terminate?]]
+(defmethod exec :non-deterministic-selector [{children :children} & [terminate?]]
   (if (not (true? (select (shuffle children) terminate?))) false true))
 
 ;;
@@ -87,18 +87,18 @@
   {:type :parallel-sequence :children children})
 
 (defn- seq-run [children terminate?]
-  (if (run-action? terminate?)
+  (if (exec-action? terminate?)
     (if-let [s (seq children)]
-      (if (run (first s) terminate?)
+      (if (exec (first s) terminate?)
         (recur (rest s) terminate?)
         false)
       true)
     false))
 
-(defmethod run :sequence [{children :children} & [terminate?]]
+(defmethod exec :sequence [{children :children} & [terminate?]]
   (if (not (false? (seq-run children terminate?))) true false))
 
-(defmethod run :non-deterministic-sequence [{children :children} & [terminate?]]
+(defmethod exec :non-deterministic-sequence [{children :children} & [terminate?]]
   (if (not (false? (seq-run (shuffle children) terminate?))) true false))
 
 (defn- all-futures-succeded? [fs]
@@ -113,14 +113,14 @@
   (doall (map deref fs))
   return)
 
-(defmethod run :parallel-sequence [{children :children} & [terminate?]]
-  (if (run-action? terminate?)
+(defmethod exec :parallel-sequence [{children :children} & [terminate?]]
+  (if (exec-action? terminate?)
     (let [parent-terminate? terminate?
           self-terminate? (atom false)
-          fs (map #(future (run % self-terminate?)) children)]
+          fs (map #(future (exec % self-terminate?)) children)]
       (loop []
         (Thread/sleep 50)
-        (cond (not (run-action? parent-terminate?)) (terminate-and-return fs self-terminate? false)
+        (cond (not (exec-action? parent-terminate?)) (terminate-and-return fs self-terminate? false)
               (all-futures-succeded? fs) true
               (any-futures-failed? fs)  (terminate-and-return fs self-terminate? false)
               :default (recur))))
@@ -135,10 +135,10 @@
   [c]
   {:type :forever :children c})
 
-(defmethod run :forever [{children :children} & [terminate?]]
+(defmethod exec :forever [{children :children} & [terminate?]]
   (loop []
-    (if (run-action? terminate?)
-      (do (run children terminate?)
+    (if (exec-action? terminate?)
+      (do (exec children terminate?)
           (recur))
       false)))
 
@@ -147,10 +147,10 @@
   [c]
   {:type :until-fail :children c})
 
-(defmethod run :until-fail [{children :children} & [terminate?]]
+(defmethod exec :until-fail [{children :children} & [terminate?]]
   (loop []
-    (if (and (run-action? terminate?)
-             (run children terminate?))
+    (if (and (exec-action? terminate?)
+             (exec children terminate?))
       (recur)
       true)))
 
@@ -159,10 +159,10 @@
   [c]
   {:type :until-success :children c})
 
-(defmethod run :until-success [{children :children} & [terminate?]]
+(defmethod exec :until-success [{children :children} & [terminate?]]
   (loop []
-    (if (and (run-action? terminate?)
-             (not (run children terminate?)))
+    (if (and (exec-action? terminate?)
+             (not (exec children terminate?)))
       (recur)
       true)))
 
@@ -171,11 +171,11 @@
   [c i]
   {:type :limit :children c :times i})
 
-(defmethod run :limit [{children :children times :times} & [terminate?]]
+(defmethod exec :limit [{children :children times :times} & [terminate?]]
   (loop [i times]
     (if (and (pos? i)
-             (run-action? terminate?))
-      (if (not (run children terminate?)) 
+             (exec-action? terminate?))
+      (if (not (exec children terminate?)) 
         (recur (dec i))
         true)
       false)))
@@ -186,38 +186,38 @@
   [c]
   {:type :inverter :children c})
 
-(defmethod run :inverter [{children :children} & [terminate?]]
-  (not (run children terminate?)))
+(defmethod exec :inverter [{children :children} & [terminate?]]
+  (not (exec children terminate?)))
 
 (defn print-blackboard
   "Print the content of the blackboard"
   [b c]
   {:type :print-blackboard :blackboard b :children c} )
 
-(defmethod run :print-blackboard
+(defmethod exec :print-blackboard
   [{children :children blackboard :blackboard} & [terminate?]]
   (doseq [[key val] @blackboard]
     (println key " ==> " val))
-  (run children terminate?))
+  (exec children terminate?))
 
 (defn print-string
   "Print a debug message."
   [s c]
   {:type :print-string :string s :children c})
 
-(defmethod run :print-string [{children :children string :string} & [terminate?]]
+(defmethod exec :print-string [{children :children string :string} & [terminate?]]
   (println string)
-  (run children terminate?))
+  (exec children terminate?))
 
 (defn break-point
   "Insert a debug breakpoint."
   [s c]
   {:type :break-point :children c})
 
-(defmethod run :break-point [{children :children} & [terminate?]]
+(defmethod exec :break-point [{children :children} & [terminate?]]
   (println "Press Enter to resume execution...")
   (.read System/in)
-  (run children terminate?))
+  (exec children terminate?))
 
 (defn interrupter
   [w c p]
@@ -226,27 +226,27 @@
    and watcher returns a result it will terminate the child and return the result of perform."
   {:type :interrupter :children c :watch w :perform p})
 
-(defmethod run :interrupter
+(defmethod exec :interrupter
   [{children :children watch :watch perform :perform} & [terminate?]]
-  (if (run-action? terminate?)
+  (if (exec-action? terminate?)
     (let [parent-terminate? terminate?
           terminate-children? (atom false)
           terminate-watch? (atom false)
-          children (future (run children terminate-children?))
-          watch (future (run watch terminate-watch?))]
+          children (future (exec children terminate-children?))
+          watch (future (exec watch terminate-watch?))]
 
       (loop []
         (Thread/sleep 50)
-        (cond (not (run-action? parent-terminate?)) (do (terminate terminate-children?)
-                                                        (run perform)
-                                                        false)
+        (cond (not (exec-action? parent-terminate?)) (do (terminate terminate-children?)
+                                                         (exec perform)
+                                                         false)
               
               (future-done? children) (do (terminate terminate-watch?)
                                           (deref children))
 
               (and (future-done? watch)
                    (boolean @watch))  (do (terminate terminate-children?)
-                                          (run perform))
+                                          (exec perform))
                    :default (recur))))
     false))
 
@@ -294,9 +294,6 @@
 	           (append-child h (node (first v) blackboard))
 	           h)))
 	     parent children)))
-
-(defn exec [t]
-  (run t))
 
 (defmacro from-blackboard 
   "A convenience macro to lookup bindings in the given blackboard."
