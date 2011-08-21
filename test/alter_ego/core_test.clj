@@ -223,42 +223,30 @@
      ~@tests))
 
 (def sample-saved-tree
-  [{:type :selector :name "Root"}
-   [{:type :sequence :name "Open Door"}
-    [{:type :action :name "Door Open?" :function 'alter-ego.sample-actions/door-open?}]
-    [{:type :action :name "Move" :function 'alter-ego.sample-actions/to-room}]]
-   [{:type :sequence :name "Closed Door"}
-    [{:type :action :name "Move" :function 'alter-ego.sample-actions/to-door}]
-    [{:type :action :name "Open Door" :function 'alter-ego.sample-actions/open-door}]
-    [{:type :until-fail :name "Until Fail"}
-     [{:type :action :name "Move" :function 'alter-ego.sample-actions/to-room}]]]
-   
-   [{:type :sequence :name "Fire Tree"}
-    [{:type :sequence :name "Until Dead"}
-     [{:type :action :name "Move" :function 'move :status :disabled}]
-     [{:type :action :name "Fire" :function 'alter-ego.sample-actions/to-room}]]]
+  {:type :selector :name "Root"
+   :children [{:type :sequence :name "Open Door"
+               :children [{:type :action :name "Door Open?" :function 'alter-ego.sample-actions/door-open?}
+                          {:type :action :name "Move" :function 'alter-ego.sample-actions/to-room}]}
+              {:type :sequence :name "Fire Tree"
+               :children [{:type :sequence :name "Until Dead"
+                           :children [{:type :action :name "Move" :function 'move :status :disabled}
+                                      {:type :action :name "Fire" :function 'alter-ego.sample-actions/to-room}]}]}
 
-   [{:type :sequence :name "Closed Door" :status :disabled}
-    [{:type :action :name "Move" :function 'move}]
-    [{:type :action :name "Open Door" :function 'open}]
-    [{:type :until-fail :name "Until Fail"}
-     [{:type :action :name "Move" :function 'move}]]]])
+              {:type :sequence :name "Closed Door" :status :disabled
+               :children [{:type :action :name "Move" :function 'move}
+                          {:type :action :name "Open Door" :function 'open}]}]})
 
-(with-private-fns [alter-ego.core [node]]
+(with-private-fns [alter-ego.core [process-tree]]
   (deftest load-test
-    (let [blackboard (ref {})
-	  tree (load-tree (node (first sample-saved-tree) blackboard)
-			  (rest sample-saved-tree) blackboard)]
+    (let [tree (process-tree sample-saved-tree (ref {}))
+          ]
       (is (= 'alter-ego.sample-actions/door-open?
-             (:symbol (first (:children (first (:children tree)))))))
+             (-> sample-saved-tree :children first :children first :function)))
       (is (= 'alter-ego.sample-actions/to-room
-             (:symbol (second (:children (first (:children tree)))))))
-      (is (= 'alter-ego.sample-actions/to-door
-             (:symbol (first (:children (second (:children tree)))))))
-      (is (= 'alter-ego.sample-actions/open-door
-             (:symbol (second (:children (second (:children tree)))))))
-      (is (= 3 (count (:children tree))))
-      (is (= 1 (count (:children (nth (:children tree) 2))))))))
+             (-> sample-saved-tree :children first :children second :function)))
+
+      (is (= 'alter-ego.sample-actions/to-room
+             (-> sample-saved-tree :children first :children second :function))))))
 
 (deftest from-blackboard-test
   (let [blackboard (ref {:key1 :val1 :key2 99 :target [3 4]})] 

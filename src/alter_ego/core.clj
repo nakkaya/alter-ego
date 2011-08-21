@@ -26,13 +26,13 @@
 
 (defn action 
   "This node wraps a function call with blackboard as its argument."
-  [symbol blackboard]
-  {:type :action :symbol symbol :blackboard blackboard})
+  [function blackboard]
+  {:type :action :function function :blackboard blackboard})
 
 (defmethod exec :action
-  [{symbol :symbol blackboard :blackboard} & [terminate?]]
+  [{function :function blackboard :blackboard} & [terminate?]]
   (if (exec-action? terminate?)
-    (boolean ((resolve symbol) blackboard))
+    (boolean ((resolve function) blackboard))
     false))
 
 ;;
@@ -254,46 +254,22 @@
 ;; Misc
 ;;
 
-(defn- node [n blackboard]
-  (let [{t :type func :function string :string} n]
-    (cond (= t :action) (if (nil? (resolve (symbol func)))
-			  (throw (Exception. "Symbol not defined."))
-			  (action (symbol func) blackboard))
-	  (= t :selector) (selector)
-	  (= t :non-deterministic-selector) (non-deterministic-selector)
-	  (= t :sequence) (sequence)
-	  (= t :non-deterministic-sequence) (non-deterministic-sequence)
-	  (= t :until-fail) (until-fail nil)
-	  (= t :until-success) (until-success nil)
-	  (= t :limit) (limit nil)
-	  (= t :inverter) (inverter nil)
-	  (= t :print-blackboard) (print-blackboard blackboard nil)
-	  (= t :print-string) (print-string string nil)
-	  (= t :break-point) (break-point nil)
-	  :default (throw (Exception. "Unknown node type.")))))
+(defn- process-tree [node blackboard]
+  (if (nil? (node :children))
+    (do (if (and (= (:type node) :action)
+                 (nil? (resolve (symbol (:function node)))))
+          (throw (Exception. (str "Symbol not defined. " (:function node)))))
+        (assoc node :blackboard blackboard))
+    (let [children (:children node)]
+      (assoc node :children (reduce (fn[h v]
+                                      (conj h (process-tree v blackboard)))
+                                    [] (filter #(not= (:status %) :disabled) (:children node)))))))
 
-(defn- append-child [p c]
-  (assoc p :children (reverse (conj (reverse (:children p)) c))))
-
-(defn load-tree 
-  "Load tree definition."
+(defn load-tree
   ([file]
-     (load-tree file (ref {})))
+     (process-tree (read-string (slurp file)) (ref {})))
   ([file blackboard]
-     (let [tree (read-string (slurp file))] 
-       (load-tree (node (first tree) blackboard) (rest tree) blackboard)))
-  ([parent children blackboard]
-     (reduce (fn[h v]
-	       (if (> (count v) 1)
-	         (let [p (node (first v) blackboard)
-	               c (rest v)]
-	           (if (nil? (:status (first v)))
-	             (append-child h (load-tree p c blackboard))
-	             h))
-	         (if (nil? (:status (first v)))
-	           (append-child h (node (first v) blackboard))
-	           h)))
-	     parent children)))
+     (process-tree (read-string (slurp file)) blackboard)))
 
 (defmacro from-blackboard 
   "A convenience macro to lookup bindings in the given blackboard."

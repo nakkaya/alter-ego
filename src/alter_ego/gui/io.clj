@@ -9,22 +9,27 @@
      (binding [*out* (java.io.FileWriter. file)]
        (prn (save-tree (.getRoot model)))))
   ([node]
-     (let [children (.children node)
-	   node (.getUserObject node)] 
-       (reduce (fn[h v] (conj h (save-tree v))) [node] 
-	       (enumeration-seq children)))))
+     (let [children (enumeration-seq (.children node))
+           parent (.getUserObject node)]
 
-(defn load-tree 
-  ([file]
-     (let [tree (read-string (slurp (.getPath file)))
-	   root (with-meta (first tree) {:file file})] 
-       (load-tree (DefaultMutableTreeNode. root) (rest tree))))
-  ([parent children]
-     (doall 
-      (map #(if (> (count %) 1)
-	      (let [p (DefaultMutableTreeNode. (first %))
-		    c (rest %)]
-		(.add parent p)
-		(load-tree p c))
-	      (.add parent (DefaultMutableTreeNode. (first %)))) children))
-     parent))
+       (if (empty? children)
+         parent
+         (assoc parent :children (reduce
+                                  (fn[h v]
+                                    (conj h (save-tree v)))
+                                  [] children))))))
+
+(defmulti load-tree class)
+
+(defmethod load-tree java.io.File [file]
+  (let [tree (read-string (slurp (.getPath file)))] 
+    (load-tree tree)))
+
+(defmethod load-tree clojure.lang.PersistentArrayMap [node]
+  (if (nil? (node :children))
+    (DefaultMutableTreeNode. node)
+    (let [children (:children node)]
+      (reduce (fn[h v]
+                (doto h
+                  (.add (load-tree v))))
+              (DefaultMutableTreeNode. (dissoc node :children)) (:children node)))))
