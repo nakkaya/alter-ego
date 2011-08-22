@@ -238,9 +238,9 @@
         (cond (future-done? children) (do (terminate terminate-watch?)
                                           (deref children))
 
-              (future-done? watch) (when (boolean @watch)
-                                     (terminate terminate-children?)
-                                     (exec perform))
+              (and (future-done? watch)
+                   (boolean @watch)) (do (terminate terminate-children?)
+                                         (exec perform))
 
               (not (exec-action? parent-terminate?)) (do (terminate terminate-children?)
                                                          (terminate terminate-watch?)
