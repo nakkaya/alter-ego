@@ -120,9 +120,9 @@
           fs (map #(future (exec % self-terminate?)) children)]
       (loop []
         (Thread/sleep 50)
-        (cond (not (exec-action? parent-terminate?)) (terminate-and-return fs self-terminate? false)
-              (all-futures-succeded? fs) true
+        (cond (all-futures-succeded? fs) true
               (any-futures-failed? fs)  (terminate-and-return fs self-terminate? false)
+              (not (exec-action? parent-terminate?)) (terminate-and-return fs self-terminate? false)
               :default (recur))))
     false))
 
@@ -237,17 +237,19 @@
 
       (loop []
         (Thread/sleep 50)
-        (cond (not (exec-action? parent-terminate?)) (do (terminate terminate-children?)
+        (cond (future-done? children) (do (terminate terminate-watch?)
+                                          (deref children))
+
+              (future-done? watch) (when (boolean @watch)
+                                     (terminate terminate-children?)
+                                     (exec perform))
+
+              (not (exec-action? parent-terminate?)) (do (terminate terminate-children?)
+                                                         (terminate terminate-watch?)
                                                          (exec perform)
                                                          false)
               
-              (future-done? children) (do (terminate terminate-watch?)
-                                          (deref children))
-
-              (and (future-done? watch)
-                   (boolean @watch))  (do (terminate terminate-children?)
-                                          (exec perform))
-                   :default (recur))))
+              :default (recur))))
     false))
 
 ;;
