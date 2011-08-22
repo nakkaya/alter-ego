@@ -101,30 +101,28 @@
 (defmethod exec :non-deterministic-sequence [{children :children} & [terminate?]]
   (if (not (false? (seq-run (shuffle children) terminate?))) true false))
 
-(defn- all-futures-succeded? [fs]
-  (and (every? true? (map future-done? fs))
-       (every? true? (map deref fs))))
+(let [all-succeded? #(and (every? true? (map future-done? %))
+                          (every? true? (map deref %)))
 
-(defn- any-futures-failed? [fs]
-  (some false? (map deref (filter future-done? fs))))
+      any-failed? #(some false? (map deref (filter future-done? %)))
+      
+      cancel (fn [fs atom return]
+               (terminate atom)
+               (doall (map deref fs))
+               return)]
 
-(defn- terminate-and-return [fs atom return]
-  (terminate atom)
-  (doall (map deref fs))
-  return)
-
-(defmethod exec :parallel-sequence [{children :children} & [terminate?]]
-  (if (exec-action? terminate?)
-    (let [parent-terminate? terminate?
-          self-terminate? (atom false)
-          fs (map #(future (exec % self-terminate?)) children)]
-      (loop []
-        (Thread/sleep 50)
-        (cond (all-futures-succeded? fs) true
-              (any-futures-failed? fs)  (terminate-and-return fs self-terminate? false)
-              (not (exec-action? parent-terminate?)) (terminate-and-return fs self-terminate? false)
-              :default (recur))))
-    false))
+  (defmethod exec :parallel-sequence [{children :children} & [terminate?]]
+    (if (exec-action? terminate?)
+      (let [parent-terminate? terminate?
+            self-terminate? (atom false)
+            fs (map #(future (exec % self-terminate?)) children)]
+        (loop []
+          (Thread/sleep 50)
+          (cond (all-succeded? fs) true
+                (any-failed? fs)  (cancel fs self-terminate? false)
+                (not (exec-action? parent-terminate?)) (cancel fs self-terminate? false)
+                :default (recur))))
+      false)))
 
 ;;
 ;; Decorators
