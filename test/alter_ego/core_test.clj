@@ -108,27 +108,38 @@
     (is (= false (exec tree-2)))
     (is (= true (exec single)))))
 
-(deftest parallel-sequence-test
-  (is (= false (exec (parallel-sequence (sequence #(identity true))
-                                        (sequence #(identity true)))
+(deftest parallel-test
+  (is (= false (exec (parallel :sequence
+                               (sequence #(identity true))
+                               (sequence #(identity true)))
                      (atom true))))
   (is (= 2 (let [a (atom 0)]
-             (exec (parallel-sequence (sequence #(swap! a inc)
-                                                #(identity false))
+             (exec (parallel :sequence
+                             (sequence #(swap! a inc)
+                                       #(identity false))
 
-                                      (sequence #(swap! a inc)
-                                                #(do (Thread/sleep 250) true)
-                                                #(swap! a inc))))
+                             (sequence #(swap! a inc)
+                                       #(do (Thread/sleep 250) true)
+                                       #(swap! a inc))))
              @a)))
 
   (is (= 3 (let [a (atom 0)]
-             (exec (parallel-sequence (sequence #(swap! a inc)
-                                                #(identity true))
+             (exec (parallel :sequence
+                             (sequence #(swap! a inc)
+                                       #(identity true))
 
-                                      (sequence #(swap! a inc)
-                                                #(do (Thread/sleep 250) true)
-                                                #(swap! a inc))))
-             @a))))
+                             (sequence #(swap! a inc)
+                                       #(do (Thread/sleep 250) true)
+                                       #(swap! a inc))))
+             @a)))
+  
+  (is (= true (exec (parallel :selector
+                              (sequence #(identity true))
+                              (sequence #(identity false))))))
+
+  (is (= false (exec (parallel :selector
+                               (sequence #(identity false))
+                               (sequence #(identity false)))))))
 
 (defn sample-tree [blackboard]
   (selector (sequence (door-open?-action blackboard)

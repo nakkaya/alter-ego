@@ -80,12 +80,6 @@
   [& children]
   {:type :non-deterministic-sequence :children children})
 
-(defn parallel-sequence
-  [& children]
-  "Concurrently executes all its children. Parallel fails if one child fails;
-   if all succeed, then the parallel succeed."
-  {:type :parallel-sequence :children children})
-
 (defn- seq-run [children terminate?]
   (if (exec-action? terminate?)
     (if-let [s (seq children)]
@@ -101,27 +95,45 @@
 (defmethod exec :non-deterministic-sequence [{children :children} & [terminate?]]
   (if (not (false? (seq-run (shuffle children) terminate?))) true false))
 
+(defn parallel
+  [policy & children]
+  "Concurrently executes all its children. If policy is :sequence, it acts as a sequence.
+   If the policy is :selector it acts as a selector."
+  {:type :parallel :policy policy :children children})
+
 (let [all-succeded? #(and (every? true? (map future-done? %))
                           (every? true? (map deref %)))
+      
+      all-failed? #(and (every? true? (map future-done? %))
+                        (every? false? (map deref %)))
 
-      any-failed? #(some false? (map deref (filter future-done? %)))
+      some-succeded? #(some true? (map deref (filter future-done? %)))
+      
+      some-failed? #(some false? (map deref (filter future-done? %)))
       
       cancel (fn [fs atom return]
                (terminate atom)
-               (doall (map deref fs))
-               return)]
+               (doall (map deref fs)) return)]
 
-  (defmethod exec :parallel-sequence [{children :children} & [terminate?]]
+  (defmethod exec :parallel [{children :children policy :policy} & [terminate?]]
     (if (exec-action? terminate?)
       (let [parent-terminate? terminate?
             self-terminate? (atom false)
             fs (map #(future (exec % self-terminate?)) children)]
-        (loop []
-          (Thread/sleep 50)
-          (cond (all-succeded? fs) true
-                (any-failed? fs)  (cancel fs self-terminate? false)
-                (not (exec-action? parent-terminate?)) (cancel fs self-terminate? false)
-                :default (recur))))
+        (if (= policy :sequence)
+          (loop []
+            (Thread/sleep 50)
+            (cond (all-succeded? fs) true
+                  (some-failed? fs)  (cancel fs self-terminate? false)
+                  (not (exec-action? parent-terminate?)) (cancel fs self-terminate? false)
+                  :default (recur)))
+
+          (loop []
+            (Thread/sleep 50)
+            (cond (all-failed? fs) false
+                  (some-succeded? fs) (cancel fs self-terminate? true)
+                  (not (exec-action? parent-terminate?)) (cancel fs self-terminate? false)
+                  :default (recur)))))
       false)))
 
 ;;
