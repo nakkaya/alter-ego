@@ -1,4 +1,4 @@
-(defproject alter-ego "0.0.3-SNAPSHOT"
+(defproject alter-ego "0.0.4-SNAPSHOT"
   :description "A reactive AI library based on the concept of behavior trees."
   :dependencies [[org.clojure/clojure "1.2.0"]]
   :main alter-ego.gui.editor
