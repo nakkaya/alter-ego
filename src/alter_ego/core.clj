@@ -233,7 +233,8 @@
   [w c p]
   "Lets its child node run normally. If the child returns a result,
    it passes that result on up the tree. But, if the child is still working,
-   and watcher returns a result it will terminate the child and return the result of perform."
+   and watcher returns a result it will terminate the child and return the
+   result of perform."
   {:type :interrupter :children c :watch w :perform p})
 
 (defmethod exec :interrupter

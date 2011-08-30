@@ -214,7 +214,7 @@
     (is (= "2\n" (with-out-str (exec tree-2))))
     (is (= "1\n" (with-out-str (exec tree-1))))))
 
-(deftest inverter-test
+(deftest interrupter-test
   (is (= 2 (let [a (atom 0)]
              (exec
               (interrupter #(swap! a inc)
