@@ -249,14 +249,18 @@
       (loop []
         (Thread/sleep 50)
         (cond (future-done? children) (do (terminate terminate-watch?)
+                                          (deref watch)
                                           (deref children))
 
               (and (future-done? watch)
                    (boolean @watch)) (do (terminate terminate-children?)
+                                         (deref children)
                                          (exec perform))
 
               (not (exec-action? parent-terminate?)) (do (terminate terminate-children?)
                                                          (terminate terminate-watch?)
+                                                         (deref watch)
+                                                         (deref children)
                                                          (exec perform)
                                                          false)
               
