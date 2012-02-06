@@ -16,6 +16,22 @@
 (defn- terminate [a]
   (swap! a (fn [_] (identity true))))
 
+(defn- parse-children [children]
+  (let [doc (if (string? (first children))
+              (first children)
+              "")
+        children (if (string? (first children))
+                   (next children)
+                   children)
+        id (if (symbol? (first children))
+               (first children)
+               nil)
+        children (if (symbol? (first children))
+                   (next children)
+                   children)]
+
+    [doc id children]))
+
 ;;
 ;; Leafs
 ;;
@@ -24,15 +40,14 @@
   (if (exec-action? terminate?)
     (boolean (f)) false))
 
-(defn action 
-  "This node wraps a function call with blackboard as its argument."
-  [function blackboard]
-  {:type :action :function function :blackboard blackboard})
+(defmacro action [& body]
+  (let [[doc id body] (parse-children body)]
+    {:type :action :children `(fn [] ~@body) :doc doc}))
 
 (defmethod exec :action
-  [{function :function blackboard :blackboard} & [terminate?]]
+  [{children :children} & [terminate?]]
   (if (exec-action? terminate?)
-    (boolean ((resolve function) blackboard))
+    (boolean (children))
     false))
 
 ;;
@@ -43,12 +58,14 @@
   "Tries to run all its children in sequence as soon as one succeeds 
    it also succeeds."
   [& children]
-  {:type :selector :children children})
+  (let [[doc id children] (parse-children children)]
+    {:type :selector :children children :doc doc :id id}))
 
 (defn non-deterministic-selector 
   "Same as selector, but shuffles all its children prior to execution."
   [& children]
-  {:type :non-deterministic-selector :children children})
+  (let [[doc id children] (parse-children children)]
+    {:type :non-deterministic-selector :children children :doc doc :id id}))
 
 (defn- select [children terminate?]
   (if (exec-action? terminate?)
@@ -73,12 +90,14 @@
   "Runs all of its children in sequential order. If one of them fails, 
    it also fails. Once all of them succeeds, it also succeeds."
   [& children]
-  {:type :sequence :children children})
+  (let [[doc id children] (parse-children children)]
+    {:type :sequence :children children :doc doc :id id}))
 
 (defn non-deterministic-sequence 
   "Same as sequence, but shuffles all its children prior to execution."
   [& children]
-  {:type :non-deterministic-sequence :children children})
+  (let [[doc id children] (parse-children children)]
+    {:type :non-deterministic-sequence :children children :doc doc :id id}))
 
 (defn- seq-run [children terminate?]
   (if (exec-action? terminate?)
@@ -96,10 +115,11 @@
   (if (not (false? (seq-run (shuffle children) terminate?))) true false))
 
 (defn parallel
-  [policy & children]
+  [& xs]
   "Concurrently executes all its children. If policy is :sequence, it acts as a sequence.
    If the policy is :selector it acts as a selector."
-  {:type :parallel :policy policy :children children})
+  (let [[doc id [policy & children]] (parse-children xs)]
+    {:type :parallel :policy policy :children children :doc doc :id id}))
 
 (let [all-succeded? #(and (every? true? (map future-done? %))
                           (every? true? (map deref %)))
@@ -178,8 +198,8 @@
 
 (defn limit 
   "Unless its children succeeds will keep running it at most i times."
-  [c i]
-  {:type :limit :children c :times i})
+  [i children]
+  {:type :limit :children children :times i})
 
 (defmethod exec :limit [{children :children times :times} & [terminate?]]
   (loop [i times]
@@ -198,36 +218,6 @@
 
 (defmethod exec :inverter [{children :children} & [terminate?]]
   (not (exec children terminate?)))
-
-(defn print-blackboard
-  "Print the content of the blackboard"
-  [b c]
-  {:type :print-blackboard :blackboard b :children c} )
-
-(defmethod exec :print-blackboard
-  [{children :children blackboard :blackboard} & [terminate?]]
-  (doseq [[key val] @blackboard]
-    (println key " ==> " val))
-  (exec children terminate?))
-
-(defn print-string
-  "Print a debug message."
-  [s c]
-  {:type :print-string :string s :children c})
-
-(defmethod exec :print-string [{children :children string :string} & [terminate?]]
-  (println string)
-  (exec children terminate?))
-
-(defn break-point
-  "Insert a debug breakpoint."
-  [s c]
-  {:type :break-point :children c})
-
-(defmethod exec :break-point [{children :children} & [terminate?]]
-  (println "Press Enter to resume execution...")
-  (.read System/in)
-  (exec children terminate?))
 
 (defn interrupter
   [w c p]
@@ -266,40 +256,3 @@
               
               :default (recur))))
     false))
-
-;;
-;; Misc
-;;
-
-(defn- process-tree [node blackboard]
-  (if (nil? (node :children))
-    (do (if (and (= (:type node) :action)
-                 (nil? (resolve (symbol (:function node)))))
-          (throw (Exception. (str "Symbol not defined. " (:function node)))))
-        (assoc node :blackboard blackboard))
-    (let [children (:children node)]
-      (assoc node :children (reduce (fn[h v]
-                                      (conj h (process-tree v blackboard)))
-                                    [] (filter #(not= (:status %) :disabled) (:children node)))))))
-
-(defn load-tree
-  ([file]
-     (process-tree (read-string (slurp file)) (ref {})))
-  ([file blackboard]
-     (process-tree (read-string (slurp file)) blackboard)))
-
-(defmacro from-blackboard 
-  "A convenience macro to lookup bindings in the given blackboard."
-  [blackboard bindings & body]
-  `(let [~@(interleave bindings
-		       (map cons 
-			    (map keyword bindings)
-			    (repeat (list (list 'deref `~blackboard)))))]
-     ~@body))
-
-(defmacro defaction
-  "Define an action which looks up its bindings from blackboard."
-  [name params & body]
-  `(defn ~name [~'blackboard] 
-     (from-blackboard ~'blackboard ~params
-       ~@body)))
