@@ -45,12 +45,12 @@
 
 (defmacro action [& body]
   (let [[doc _ body] (parse-children body :action)]
-    {:type :action :doc doc :id '(gensym "N_") :children `(fn [] ~@body)}))
+    {:type :action :doc doc :id '(gensym "N_") :action `(fn [] ~@body)}))
 
 (defmethod exec :action
-  [{children :children} & [terminate?]]
+  [{action :action} & [terminate?]]
   (if (exec-action? terminate?)
-    (boolean (children))
+    (boolean (action))
     false))
 
 ;;
@@ -288,8 +288,9 @@
        (if ((:id node) @subgraphs)
          (add parent-id " -> "  ((:id node) @subgraphs) "\n")
          (let [{:keys [doc id children type]} node
-               children (if (seq? children)
-                          children [children])
+               children (cond (seq? children) children
+                              (nil? children) []
+                              :default [children])
                style (if (= type :action)
                        ",style=\"filled\",fillcolor=\"#CCFFFF\"" "")]
 
