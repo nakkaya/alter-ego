@@ -256,3 +256,109 @@
               
               :default (recur))))
     false))
+
+;;
+;; Graphviz 
+;;
+
+(defn- default-doc [type]
+  (let [capitalize #(str (Character/toUpperCase (.charAt % 0))
+                         (.toLowerCase (subs % 1)))
+        doc (map capitalize
+                 (-> (name type)
+                     (.split "-")))]
+    (apply str (interpose \space doc))))
+
+(defn graph
+  ([tree f]
+     (graph tree f #{}))
+  ([tree f skip]
+     (let [subgraphs (atom {})
+           buffer (StringBuffer.)
+           add (fn [& xs]
+                 (.append buffer (apply str xs)))]
+       (add "digraph bt {\n"
+            "graph [ordering=\"out\",,rankdir=\"TB\"];"
+            "node [fontname=Arial, style=\"rounded\", shape=box]"
+            "edge [color=\"0.650 0.700 0.700\"]")
+       (graph add skip subgraphs tree nil)
+       (add "}")
+       (spit f (.toString buffer))))
+  
+  ([add skip subgraphs node parent-id]
+     (if (skip (:id node))
+       (let [node-id (gensym "N_")]
+         (add node-id " [label=\"" (:id node) "\",style=\"filled\",fillcolor=\"#00ff005f\"];\n")
+         (add parent-id " -> "  node-id "\n"))
+       (if (and (:id node)
+                ((:id node) @subgraphs))
+         (add parent-id " -> "  ((:id node) @subgraphs) "\n")
+         (let [node-id (gensym "N_")
+               {:keys [doc id children type policy watch perform times]} node
+               children (->> (if (seq? children)
+                               children
+                               [children])
+                             (filter #(not (fn? %))))
+               extra-doc (cond
+                          (= type :parallel) (str " - " (name policy))
+                          (= type :limit) (str " - " times)
+                          :default "")
+               style (if (= type :action)
+                       ",style=\"filled\",fillcolor=\"#CCFFFF\"" "")]
+
+           (if (or (nil? doc)
+                   (empty? doc))
+             (add node-id " [label=\"" (default-doc type) extra-doc "\" " style "];\n")
+             (add node-id " [label=\"" doc "\\n(" (name type) extra-doc ")\" " style "];\n"))
+           
+           (when parent-id
+             (add parent-id " -> "  node-id "\n"))
+           
+           (when id
+             (do (swap! subgraphs merge {id node-id})
+                 (add "subgraph " (gensym "cluster_") " {\n"
+                      "label = \"" id "\";\n"
+                      "labeljust = \"l\";\n"
+                      "style=dashed;"
+                      "color=\"#B0B0B0\"")))
+
+           (when watch
+             (graph add skip subgraphs watch node-id))
+           
+           (doseq [c children]
+             (graph add skip subgraphs c node-id))
+
+           (when perform
+             (graph add skip subgraphs perform node-id))
+           
+           (when id
+             (add "}\n")))))))
+
+(comment
+  (let [common (non-deterministic-selector
+                "Non Determine" 'common
+                (until-success
+                 (action "Kill"))
+                (action 1))
+
+        parallel (limit 3
+                        (parallel "Paralel" 'parallel
+                                  :sequence
+                                  (action 1)
+                                  (action 1)
+                                  (action 1)))
+        ]
+    (graph (selector
+            "Select from" 'top (action 2) common
+            (interrupter
+             (selector "Watch referee event" (action 1))
+             (selector "Do Stuff" (sequence
+                                   #(+ 1 3)
+                                   common))
+             (selector "Perform" (action 3)))
+            
+            (selector "Then try" common
+                      parallel))
+           "/Users/nakkaya/Desktop/test.gv"
+           #{}))
+  )
