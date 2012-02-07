@@ -16,16 +16,24 @@
 (defn- terminate [a]
   (swap! a (fn [_] (identity true))))
 
-(defn- parse-children [children]
+(defn- default-doc [type]
+  (let [capitalize #(str (Character/toUpperCase (.charAt % 0))
+                         (.toLowerCase (subs % 1)))
+        doc (map capitalize
+                 (-> (name type)
+                     (.split "-")))]
+    (apply str (interpose \space doc))))
+
+(defn- parse-children [children type]
   (let [doc (if (string? (first children))
-              (first children)
-              "")
+              (str (first children) "\\n" (name type))
+              (default-doc type))
         children (if (string? (first children))
                    (next children)
                    children)
         id (if (symbol? (first children))
                (first children)
-               nil)
+               (gensym "N_"))
         children (if (symbol? (first children))
                    (next children)
                    children)]
@@ -41,8 +49,8 @@
     (boolean (f)) false))
 
 (defmacro action [& body]
-  (let [[doc id body] (parse-children body)]
-    {:type :action :children `(fn [] ~@body) :doc doc}))
+  (let [[doc _ body] (parse-children body :action)]
+    {:type :action :doc doc :id '(gensym "N_") :children `(fn [] ~@body)}))
 
 (defmethod exec :action
   [{children :children} & [terminate?]]
@@ -58,13 +66,13 @@
   "Tries to run all its children in sequence as soon as one succeeds 
    it also succeeds."
   [& children]
-  (let [[doc id children] (parse-children children)]
+  (let [[doc id children] (parse-children children :selector)]
     {:type :selector :children children :doc doc :id id}))
 
 (defn non-deterministic-selector 
   "Same as selector, but shuffles all its children prior to execution."
   [& children]
-  (let [[doc id children] (parse-children children)]
+  (let [[doc id children] (parse-children children :non-deterministic-selector)]
     {:type :non-deterministic-selector :children children :doc doc :id id}))
 
 (defn- select [children terminate?]
@@ -90,13 +98,13 @@
   "Runs all of its children in sequential order. If one of them fails, 
    it also fails. Once all of them succeeds, it also succeeds."
   [& children]
-  (let [[doc id children] (parse-children children)]
+  (let [[doc id children] (parse-children children :sequence)]
     {:type :sequence :children children :doc doc :id id}))
 
 (defn non-deterministic-sequence 
   "Same as sequence, but shuffles all its children prior to execution."
   [& children]
-  (let [[doc id children] (parse-children children)]
+  (let [[doc id children] (parse-children children :non-deterministic-sequence)]
     {:type :non-deterministic-sequence :children children :doc doc :id id}))
 
 (defn- seq-run [children terminate?]
@@ -118,8 +126,8 @@
   [& xs]
   "Concurrently executes all its children. If policy is :sequence, it acts as a sequence.
    If the policy is :selector it acts as a selector."
-  (let [[doc id [policy & children]] (parse-children xs)]
-    {:type :parallel :policy policy :children children :doc doc :id id}))
+  (let [[doc id [policy & children]] (parse-children xs :parallel)]
+    {:type :parallel :policy policy :children children :doc (str doc " - " (name policy)) :id id}))
 
 (let [all-succeded? #(and (every? true? (map future-done? %))
                           (every? true? (map deref %)))
@@ -163,7 +171,7 @@
 (defn forever
   "When its child task finishes, it runs it once more."
   [c]
-  {:type :forever :children c})
+  {:type :forever :children c :doc (default-doc :forever) :id (gensym "N_")})
 
 (defmethod exec :forever [{children :children} & [terminate?]]
   (loop []
@@ -175,7 +183,7 @@
 (defn until-fail 
   "Runs its children until it returns false."
   [c]
-  {:type :until-fail :children c})
+  {:type :until-fail :children c :doc (default-doc :until-fail) :id (gensym "N_")})
 
 (defmethod exec :until-fail [{children :children} & [terminate?]]
   (loop []
@@ -187,7 +195,7 @@
 (defn until-success
   "Runs its children until it returns true."
   [c]
-  {:type :until-success :children c})
+  {:type :until-success :children c :doc (default-doc :until-success) :id (gensym "N_")})
 
 (defmethod exec :until-success [{children :children} & [terminate?]]
   (loop []
@@ -199,7 +207,7 @@
 (defn limit 
   "Unless its children succeeds will keep running it at most i times."
   [i children]
-  {:type :limit :children children :times i})
+  {:type :limit :children children :times i :doc (str (default-doc :limit) " - " i) :id (gensym "N_")})
 
 (defmethod exec :limit [{children :children times :times} & [terminate?]]
   (loop [i times]
@@ -214,21 +222,21 @@
   "Inverts its childrens return value, succees becames failure and 
    vice versa."
   [c]
-  {:type :inverter :children c})
+  {:type :inverter :children c :doc (default-doc :inverter) :id (gensym "N_")})
 
 (defmethod exec :inverter [{children :children} & [terminate?]]
   (not (exec children terminate?)))
 
 (defn interrupter
-  [w c p]
+  [& children]
   "Lets its child node run normally. If the child returns a result,
    it passes that result on up the tree. But, if the child is still working,
    and watcher returns a result it will terminate the child and return the
-   result of perform."
-  {:type :interrupter :children c :watch w :perform p})
+   result of perform. [watch child perform]"
+  {:type :interrupter :children children :doc (default-doc :interrupter) :id (gensym "N_")})
 
 (defmethod exec :interrupter
-  [{children :children watch :watch perform :perform} & [terminate?]]
+  [{[watch children perform] :children} & [terminate?]]
   (if (exec-action? terminate?)
     (let [parent-terminate? terminate?
           terminate-children? (atom false)
@@ -261,19 +269,11 @@
 ;; Graphviz 
 ;;
 
-(defn- default-doc [type]
-  (let [capitalize #(str (Character/toUpperCase (.charAt % 0))
-                         (.toLowerCase (subs % 1)))
-        doc (map capitalize
-                 (-> (name type)
-                     (.split "-")))]
-    (apply str (interpose \space doc))))
-
 (defn graph
   ([tree f]
      (graph tree f #{}))
   ([tree f skip]
-     (let [subgraphs (atom {})
+     (let [subgraphs (atom #{})
            buffer (StringBuffer.)
            add (fn [& xs]
                  (.append buffer (apply str xs)))]
@@ -290,66 +290,42 @@
        (let [node-id (gensym "N_")]
          (add node-id " [label=\"" (:id node) "\",style=\"filled\",fillcolor=\"#00ff005f\"];\n")
          (add parent-id " -> "  node-id "\n"))
-       (if (and (:id node)
-                ((:id node) @subgraphs))
+       (if ((:id node) @subgraphs)
          (add parent-id " -> "  ((:id node) @subgraphs) "\n")
-         (let [node-id (gensym "N_")
-               {:keys [doc id children type policy watch perform times]} node
+         (let [{:keys [doc id children type]} node
                children (->> (if (seq? children)
                                children
                                [children])
                              (filter #(not (fn? %))))
-               extra-doc (cond
-                          (= type :parallel) (str " - " (name policy))
-                          (= type :limit) (str " - " times)
-                          :default "")
                style (if (= type :action)
                        ",style=\"filled\",fillcolor=\"#CCFFFF\"" "")]
 
-           (if (or (nil? doc)
-                   (empty? doc))
-             (add node-id " [label=\"" (default-doc type) extra-doc "\" " style "];\n")
-             (add node-id " [label=\"" doc "\\n(" (name type) extra-doc ")\" " style "];\n"))
+           (add id " [label=\"" doc "\"" style "];\n")
            
            (when parent-id
-             (add parent-id " -> "  node-id "\n"))
-           
-           (when id
-             (do (swap! subgraphs merge {id node-id})
-                 (add "subgraph " (gensym "cluster_") " {\n"
-                      "label = \"" id "\";\n"
-                      "labeljust = \"l\";\n"
-                      "style=dashed;"
-                      "color=\"#B0B0B0\"")))
+             (add parent-id " -> "  id "\n"))
 
-           (when watch
-             (graph add skip subgraphs watch node-id))
-           
+           (swap! subgraphs conj id)
+
            (doseq [c children]
-             (graph add skip subgraphs c node-id))
-
-           (when perform
-             (graph add skip subgraphs perform node-id))
-           
-           (when id
-             (add "}\n")))))))
+             (graph add skip subgraphs c id)))))))
 
 (comment
   (let [common (non-deterministic-selector
-                "Non Determine" 'common
+                "Non Determine" 'non
                 (until-success
                  (action "Kill"))
                 (action 1))
 
         parallel (limit 3
-                        (parallel "Paralel" 'parallel
+                        (parallel "Paralel"
                                   :sequence
                                   (action 1)
                                   (action 1)
                                   (action 1)))
         ]
     (graph (selector
-            "Select from" 'top (action 2) common
+            "Select from" (action 2) common
             (interrupter
              (selector "Watch referee event" (action 1))
              (selector "Do Stuff" (sequence
