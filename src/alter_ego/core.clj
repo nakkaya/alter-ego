@@ -5,8 +5,7 @@
 (defmulti exec 
   "Given a node dispatch to its exec implementation."
   (fn [node & [terminate?]]
-    (cond (fn? node) :function
-          :default (node :type))))
+    (node :type)))
 
 (defn- exec-action? [terminate?]
   (cond (nil? terminate?) true
@@ -43,10 +42,6 @@
 ;;
 ;; Leafs
 ;;
-
-(defmethod exec :function [f & [terminate?]]
-  (if (exec-action? terminate?)
-    (boolean (f)) false))
 
 (defmacro action [& body]
   (let [[doc _ body] (parse-children body :action)]
@@ -293,10 +288,8 @@
        (if ((:id node) @subgraphs)
          (add parent-id " -> "  ((:id node) @subgraphs) "\n")
          (let [{:keys [doc id children type]} node
-               children (->> (if (seq? children)
-                               children
-                               [children])
-                             (filter #(not (fn? %))))
+               children (if (seq? children)
+                          children [children])
                style (if (= type :action)
                        ",style=\"filled\",fillcolor=\"#CCFFFF\"" "")]
 

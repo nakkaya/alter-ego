@@ -6,9 +6,7 @@
 (deftest action-test
   (let [board (atom 0)]
     (is (= 1 (do (exec (action (swap! board inc))) @board)))
-    (is (= true (exec (action (swap! board inc)))))
-    (is (= 3 (do (exec (fn [] (swap! board inc))) @board)))
-    (is (= true (exec (fn [] (swap! board inc)))))))
+    (is (= true (exec (action (swap! board inc)))))))
 
 (defn inc-i [blackboard]
   (action (dosync (alter blackboard assoc :i (inc (:i @blackboard))))))
@@ -85,10 +83,10 @@
             (inc-i blackboard)))
 
 (defn sequence-tree-3 [bb]
-  (let [f1 (fn [] (dosync (alter bb assoc :i 5)))
+  (let [f1 (action (dosync (alter bb assoc :i 5)))
         f2 (fn [i] (dosync (alter bb assoc :i (+ i (:i @bb)))))]
     (sequence f1
-              #(f2 5))))
+              (action (f2 5)))))
 
 (deftest sequence-test
   (let [blackboard (ref {:door-open true :i 0})
@@ -132,36 +130,36 @@
 
 (deftest parallel-test
   (is (= false (exec (parallel :sequence
-                               (sequence #(identity true))
-                               (sequence #(identity true)))
+                               (sequence (action true))
+                               (sequence (action true)))
                      (atom true))))
   (is (= 2 (let [a (atom 0)]
              (exec (parallel :sequence
-                             (sequence #(swap! a inc)
-                                       #(identity false))
+                             (sequence (action (swap! a inc))
+                                       (action false))
 
-                             (sequence #(swap! a inc)
-                                       #(do (Thread/sleep 250) true)
-                                       #(swap! a inc))))
+                             (sequence (action (swap! a inc))
+                                       (action (Thread/sleep 250) true)
+                                       (action (swap! a inc)))))
              @a)))
 
   (is (= 3 (let [a (atom 0)]
              (exec (parallel :sequence
-                             (sequence #(swap! a inc)
-                                       #(identity true))
+                             (sequence (action (swap! a inc))
+                                       (action true))
 
-                             (sequence #(swap! a inc)
-                                       #(do (Thread/sleep 250) true)
-                                       #(swap! a inc))))
+                             (sequence (action (swap! a inc))
+                                       (action (Thread/sleep 250) true)
+                                       (action (swap! a inc)))))
              @a)))
   
   (is (= true (exec (parallel :selector
-                              (sequence #(identity true))
-                              (sequence #(identity false))))))
+                              (sequence (action true))
+                              (sequence (action false))))))
 
   (is (= false (exec (parallel :selector
-                               (sequence #(identity false))
-                               (sequence #(identity false)))))))
+                               (sequence (action false))
+                               (sequence (action false)))))))
 
 (defn sample-tree [blackboard]
   (selector (sequence (door-open? blackboard)
@@ -221,13 +219,13 @@
 (deftest interrupter-test
   (is (= 2 (let [a (atom 0)]
              (exec
-              (interrupter #(swap! a inc)
-                           (sequence #(do (Thread/sleep 500) true)
-                                     #(swap! a inc))
-                           #(swap! a inc)))
+              (interrupter (action (swap! a inc))
+                           (sequence (action (Thread/sleep 500) true)
+                                     (action (swap! a inc)))
+                           (action (swap! a inc))))
              @a)))
 
   (is (= false (exec
-                (interrupter #(do  true)
-                             (sequence #(do (Thread/sleep 500) true))
-                             #(identity false))))))
+                (interrupter (action true)
+                             (sequence (action (Thread/sleep 500) true))
+                             (action false))))))
