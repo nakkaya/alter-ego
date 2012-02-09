@@ -1,6 +1,7 @@
 (ns #^{:author "Nurullah Akkaya"}
   alter-ego.core
-  (:refer-clojure :exclude [sequence]))
+  (:refer-clojure :exclude [sequence])
+  (:use [clojure.java.shell]))
 
 (defmulti exec 
   "Given a node dispatch to its exec implementation."
@@ -264,10 +265,8 @@
 ;; Graphviz 
 ;;
 
-(defn graph
-  ([tree f]
-     (graph tree f #{}))
-  ([tree f skip]
+(defn- graph
+  ([tree skip]
      (let [subgraphs (atom #{})
            buffer (StringBuffer.)
            add (fn [& xs]
@@ -278,8 +277,7 @@
             "edge [color=\"0.650 0.700 0.700\"]")
        (graph add skip subgraphs tree nil)
        (add "}")
-       (spit f (.toString buffer))))
-  
+       (.toString buffer)))
   ([add skip subgraphs node parent-id]
      (if (skip (:id node))
        (let [node-id (gensym "N_")]
@@ -304,31 +302,26 @@
            (doseq [c children]
              (graph add skip subgraphs c id)))))))
 
-(comment
-  (let [common (non-deterministic-selector
-                "Non Determine" 'non
-                (until-success
-                 (action "Kill"))
-                (action 1))
+(defn- render [dot]
+  (:out (sh "dot" "-Tpng" :in dot :in-enc "UTF-8" :out-enc :bytes)))
 
-        parallel (limit 3
-                        (parallel "Paralel"
-                                  :sequence
-                                  (action 1)
-                                  (action 1)
-                                  (action 1)))
-        ]
-    (graph (selector
-            "Select from" (action 2) common
-            (interrupter
-             (selector "Watch referee event" (action 1))
-             (selector "Do Stuff" (sequence
-                                   #(+ 1 3)
-                                   common))
-             (selector "Perform" (action 3)))
-            
-            (selector "Then try" common
-                      parallel))
-           "/Users/nakkaya/Desktop/test.gv"
-           #{}))
-  )
+(defn export [tree f fmt & [skip]]
+  (let [dot (graph tree (if skip
+                          skip #{}))]
+    (condp = fmt
+      :dot (spit f dot)
+      :png (let [bytes (render dot)]
+             (with-open [f (java.io.FileOutputStream. f)]
+               (.write f bytes)))
+      :default (throw (Exception. "Unknown Format")))))
+
+(defn show [tree & [skip]]
+  (let [dot (graph tree (if skip
+                          skip #{}))
+        bytes (render dot)
+        image (javax.swing.ImageIcon. bytes)]
+
+    (doto (javax.swing.JFrame.)
+      (.add (javax.swing.JLabel. image))
+      (.pack)
+      (.show))))
