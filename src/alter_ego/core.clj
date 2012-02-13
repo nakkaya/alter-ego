@@ -224,11 +224,11 @@
   (not (exec children terminate?)))
 
 (defn interrupter
-  [& children]
   "Lets its child node run normally. If the child returns a result,
    it passes that result on up the tree. But, if the child is still working,
    and watcher returns a result it will terminate the child and return the
    result of perform. [watch child perform]"
+  [& children]
   {:type :interrupter :children children :doc (default-doc :interrupter) :id (gensym "N_")})
 
 (defmethod exec :interrupter
