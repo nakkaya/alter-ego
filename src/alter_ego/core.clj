@@ -119,9 +119,9 @@
   (if (not (false? (seq-run (shuffle children) terminate?))) true false))
 
 (defn parallel
-  [& xs]
   "Concurrently executes all its children. If policy is :sequence, it acts as a sequence.
    If the policy is :selector it acts as a selector."
+  [& xs]
   (let [[doc id [policy & children]] (parse-children xs :parallel)]
     {:type :parallel :policy policy :children children :doc (str doc " - " (name policy)) :id id}))
 
@@ -145,19 +145,27 @@
             self-terminate? (atom false)
             fs (map #(future (exec % self-terminate?)) children)]
         (if (= policy :sequence)
-          (loop []
-            (Thread/sleep 50)
-            (cond (all-succeded? fs) true
-                  (some-failed? fs)  (cancel fs self-terminate? false)
-                  (not (exec-action? parent-terminate?)) (cancel fs self-terminate? false)
-                  :default (recur)))
+          (try
+            (loop []
+              (Thread/sleep 50)
+              (cond (all-succeded? fs) true
+                    (some-failed? fs)  (cancel fs self-terminate? false)
+                    (not (exec-action? parent-terminate?)) (cancel fs self-terminate? false)
+                    :default (recur)))
+            (catch Exception e
+              (cancel fs self-terminate? false)
+              (throw e)))
 
-          (loop []
-            (Thread/sleep 50)
-            (cond (all-failed? fs) false
-                  (some-succeded? fs) (cancel fs self-terminate? true)
-                  (not (exec-action? parent-terminate?)) (cancel fs self-terminate? false)
-                  :default (recur)))))
+          (try
+            (loop []
+              (Thread/sleep 50)
+              (cond (all-failed? fs) false
+                    (some-succeded? fs) (cancel fs self-terminate? true)
+                    (not (exec-action? parent-terminate?)) (cancel fs self-terminate? false)
+                    :default (recur)))
+            (catch Exception e
+              (cancel fs self-terminate? false)
+              (throw e)))))
       false)))
 
 ;;
@@ -243,13 +251,14 @@
       (loop []
         (Thread/sleep 50)
         (cond (future-done? children) (do (terminate terminate-watch?)
+                                          (try @children (catch Exception e (throw e)))
                                           (deref watch)
                                           (deref children))
 
-              (and (future-done? watch)
-                   (boolean @watch)) (do (terminate terminate-children?)
-                                         (deref children)
-                                         (exec perform))
+              (future-done? watch) (do (terminate terminate-children?)
+                                       (try @watch (catch Exception e (throw e)))
+                                       (deref children)
+                                       (exec perform))
 
               (not (exec-action? parent-terminate?)) (do (terminate terminate-children?)
                                                          (terminate terminate-watch?)
