@@ -229,3 +229,19 @@
                 (interrupter (action true)
                              (sequence (action (Thread/sleep 500) true))
                              (action false))))))
+
+(deftest interrupter-test
+  (is (= 1 (let [a (atom 0)]
+             (exec-repl (action (throw (Exception. "Test Exception")))
+                        (action (swap! a inc)))
+             @a)))
+
+  (is (= 0 (let [a (atom 0)]
+             (exec-repl (action )
+                        (action (swap! a inc)))
+             @a)))
+
+  (is (= 1 (let [a (atom 0)]
+             (exec-repl (action (swap! a inc))
+                        (action (swap! a inc)))
+             @a))))

@@ -270,6 +270,38 @@
               :default (recur))))
     false))
 
+(defn exec-repl
+  "Exec given behaviour, when the user presses a key interrupt it and run cleanup action
+   unless it completes."
+  [behaviour cleanup-when-interrupted]
+  (let [stop? (atom false)
+        done? (atom false)]
+    (future (try
+              (exec (interrupter
+                     (until-success
+                      (action (Thread/sleep 50)
+                              (deref stop?)))
+                     (selector (sequence behaviour
+                                         (action (swap! done? not)))
+                               (action (swap! done? not)))
+                     (action true)))
+              (catch Exception e
+                (println e)
+                (swap! done? not)
+                (exec cleanup-when-interrupted))))
+    
+    (println "Press Any Key to Interrupt")
+    
+    (while (and (not (.ready ^clojure.lang.LineNumberingPushbackReader *in*))
+                (not @done?))
+      (Thread/sleep 20))
+    
+    (swap! stop? not)
+    
+    (if (and (not @done?)
+             @stop?)
+      (exec cleanup-when-interrupted))))
+
 ;;
 ;; Graphviz 
 ;;
