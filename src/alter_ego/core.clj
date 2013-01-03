@@ -302,6 +302,15 @@
              @stop?)
       (exec cleanup-when-interrupted))))
 
+(defmacro dynamic
+  "Allows building of trees at run time, dynamic
+   node executes its body and runs the returned tree."
+  [& body]
+  `{:type :dynamic :children (fn [] ~@body) :doc "Dynamic" :id (gensym "N_")})
+
+(defmethod exec :dynamic [{children :children} & [terminate?]]
+  (exec (children) terminate?))
+
 ;;
 ;; Graphviz 
 ;;
