@@ -290,9 +290,9 @@
                 (swap! done? not)
                 (exec cleanup-when-interrupted))))
     
-    (println "Press Any Key to Interrupt")
+    (println "Press Enter to Interrupt")
     
-    (while (and (not (.ready ^clojure.lang.LineNumberingPushbackReader *in*))
+    (while (and (not (read-line))
                 (not @done?))
       (Thread/sleep 20))
     
