@@ -274,7 +274,8 @@
   "Exec given behaviour, when the user presses a key interrupt it and run cleanup action
    unless it completes."
   [behaviour cleanup-when-interrupted]
-  (let [stop? (atom false)
+  (let [read-line (resolve 'read-line)
+        stop? (atom false)
         done? (atom false)]
     (future (try
               (exec (interrupter
