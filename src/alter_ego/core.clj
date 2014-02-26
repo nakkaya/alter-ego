@@ -323,7 +323,7 @@
            add (fn [& xs]
                  (.append buffer (apply str xs)))]
        (add "digraph bt {\n"
-            "graph [ordering=\"out\",,rankdir=\"TB\"];"
+            "graph [ordering=\"out\",rankdir=\"TB\"];"
             "node [fontname=Arial, style=\"rounded\", shape=box]"
             "edge [color=\"0.650 0.700 0.700\"]")
        (graph add skip subgraphs tree nil)
