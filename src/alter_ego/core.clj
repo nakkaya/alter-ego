@@ -1,7 +1,9 @@
 (ns #^{:author "Nurullah Akkaya"}
   alter-ego.core
   (:refer-clojure :exclude [sequence])
-  (:use [clojure.java.shell]))
+  (:use [clojure.java.shell :only [sh]]
+        [clojure.pprint :only [write code-dispatch]]
+        [clojure.stacktrace :only [root-cause]]))
 
 (defmulti exec 
   "Given a node dispatch to its exec implementation."
@@ -44,15 +46,52 @@
 ;; Leafs
 ;;
 
+(def alter-ego-trace-logger (atom nil))
+
+(defn alter-ego-set-logger [f]
+  (reset! alter-ego-trace-logger f))
+
+(defn- unmangle
+  [class-name]
+  (.replace
+   (clojure.string/replace class-name #"^(.+)\$([^@]+)(|@.+)$" "$1/$2")
+   \_ \-))
+
+(defmacro current-fn-name []
+  "Returns a string, the name of the current Clojure function"
+  `(-> (Throwable.) .getStackTrace first .getClassName unmangle))
+
+(defmacro trace
+  [c]
+  `{:trace (current-fn-name)
+    :type :trace :children ~c :doc "trace" :id (gensym "N_")})
+
+(defmethod exec :trace [{children :children trace :trace} & [terminate?]]
+  (try
+    (exec children terminate?)
+    (catch Exception e
+      (when @alter-ego-trace-logger
+        (@alter-ego-trace-logger
+         (str "Trace=> " trace
+              " - Thread: " (.getName (Thread/currentThread)))))
+      (throw e))))
+
 (defmacro action [& body]
   (let [[doc _ body] (parse-children body :action)]
-    {:type :action :doc doc :id '(gensym "N_") :action `(fn [] ~@body)}))
+    {:type :action :trace `(quote (action ~@body)) :doc doc :id '(gensym "N_") :action `(fn [] ~@body)}))
 
 (defmethod exec :action
-  [{action :action} & [terminate?]]
-  (if (exec-action? terminate?)
-    (boolean (action))
-    false))
+  [{action :action trace :trace} & [terminate?]]
+  (try
+    (if (exec-action? terminate?)
+      (boolean (action))
+      false)
+    (catch Exception e
+      (when @alter-ego-trace-logger
+        (@alter-ego-trace-logger
+         (str (root-cause e) " - Thread: " (.getName (Thread/currentThread)) "\n"
+              (write trace :dispatch code-dispatch :stream nil))))
+      (throw e))))
 
 ;;
 ;; Selectors
@@ -287,7 +326,7 @@
                                (action (swap! done? not)))
                      (action true)))
               (catch Exception e
-                (println e)
+                (flush)
                 (swap! done? not)
                 (exec cleanup-when-interrupted))))
     
