@@ -8,6 +8,15 @@
     (is (= 1 (do (exec (action (swap! board inc))) @board)))
     (is (= true (exec (action (swap! board inc)))))))
 
+(deftest throttled-action-test
+  (let [board (atom 0)
+        inc-action (throttled-action 1 :second (swap! board inc))
+        now (System/currentTimeMillis)]
+    (is (= 1 (do (exec inc-action) @board)))
+    (is (= 2 (do (exec inc-action) @board)))
+    (is (= 3 (do (exec inc-action) @board)))
+    (is (>= (- (System/currentTimeMillis) now) 2000))))
+
 (defn inc-i [blackboard]
   (action (dosync (alter blackboard assoc :i (inc (:i @blackboard))))))
 

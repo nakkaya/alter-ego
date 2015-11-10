@@ -3,7 +3,8 @@
   (:refer-clojure :exclude [sequence])
   (:use [clojure.java.shell :only [sh]]
         [clojure.pprint :only [write code-dispatch]]
-        [clojure.stacktrace :only [root-cause]]))
+        [clojure.stacktrace :only [root-cause]]
+        [throttler.core :only [throttle-fn]]))
 
 (defmulti exec 
   "Given a node dispatch to its exec implementation."
@@ -79,6 +80,11 @@
 (defmacro action [& body]
   (let [[doc _ body] (parse-children body :action)]
     {:type :action :trace `(quote (action ~@body)) :doc doc :id '(gensym "N_") :action `(fn [] ~@body)}))
+
+(defmacro throttled-action [rate unit & body]
+  (let [[doc _ body] (parse-children body :action)]
+    {:type :action :trace `(quote (throttled-action ~@body))
+     :doc doc :id '(gensym "N_") :action `(throttle-fn (fn [] ~@body) ~rate ~unit)}))
 
 (defmethod exec :action
   [{action :action trace :trace} & [terminate?]]
