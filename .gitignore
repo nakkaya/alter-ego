@@ -6,3 +6,4 @@ classes
 autodoc
 .lein-failures
 /target
+.lein-repl-history
