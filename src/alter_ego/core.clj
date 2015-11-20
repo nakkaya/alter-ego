@@ -52,7 +52,7 @@
 (defn alter-ego-set-logger [f]
   (reset! alter-ego-trace-logger f))
 
-(defn- unmangle
+(defn alter-ego-unmangle
   [class-name]
   (.replace
    (clojure.string/replace class-name #"^(.+)\$([^@]+)(|@.+)$" "$1/$2")
@@ -60,7 +60,7 @@
 
 (defmacro current-fn-name []
   "Returns a string, the name of the current Clojure function"
-  `(-> (Throwable.) .getStackTrace first .getClassName unmangle))
+  `(-> (Throwable.) .getStackTrace first .getClassName alter-ego-unmangle))
 
 (defmacro trace
   [c]
@@ -73,8 +73,7 @@
     (catch Exception e
       (when @alter-ego-trace-logger
         (@alter-ego-trace-logger
-         (str "Trace=> " trace
-              " - Thread: " (.getName (Thread/currentThread)))))
+         (str "Trace=> " trace)))
       (throw e))))
 
 (defmacro action [& body]
@@ -95,7 +94,7 @@
     (catch Exception e
       (when @alter-ego-trace-logger
         (@alter-ego-trace-logger
-         (str (root-cause e) " - Thread: " (.getName (Thread/currentThread)) "\n"
+         (str (root-cause e) "\n"
               (write trace :dispatch code-dispatch :stream nil))))
       (throw e))))
 
