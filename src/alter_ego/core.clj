@@ -3,8 +3,7 @@
   (:refer-clojure :exclude [sequence])
   (:use [clojure.java.shell :only [sh]]
         [clojure.pprint :only [write code-dispatch]]
-        [clojure.stacktrace :only [root-cause]]
-        [throttler.core :only [throttle-fn]]))
+        [clojure.stacktrace :only [root-cause]]))
 
 (defmulti exec 
   "Given a node dispatch to its exec implementation."
@@ -80,10 +79,31 @@
   (let [[doc _ body] (parse-children body :action)]
     {:type :action :trace `(quote (action ~@body)) :doc doc :id '(gensym "N_") :action `(fn [] ~@body)}))
 
+(def ^{:private true} unit->ms
+  {:microsecond 0.001 :millisecond 1
+   :second 1000 :minute 60000
+   :hour 3600000 :day 86400000
+   :month 2678400000})
+
+(defn throttler [f rate unit]
+  (let [rate-ms (/ (unit->ms unit) rate)
+        ;;rate-ms (/ rate (unit->ms unit))
+        t-last-run (atom (System/currentTimeMillis))
+        throttled-fn (fn [f]
+                       (fn [& args]
+                         (let [elapsed (- (System/currentTimeMillis) @t-last-run)
+                               left-to-wait (- rate-ms elapsed)]
+                           (when (pos? left-to-wait)
+                             (Thread/sleep left-to-wait)))
+                         (let [ret (apply f args)]
+                           (reset! t-last-run (System/currentTimeMillis))
+                           ret)))]
+    (throttled-fn f)))
+
 (defmacro throttled-action [rate unit & body]
   (let [[doc _ body] (parse-children body :action)]
     {:type :action :trace `(quote (throttled-action ~@body))
-     :doc doc :id '(gensym "N_") :action `(throttle-fn (fn [] ~@body) ~rate ~unit)}))
+     :doc doc :id '(gensym "N_") :action `(throttler (fn [] ~@body) ~rate ~unit)}))
 
 (defmethod exec :action
   [{action :action trace :trace} & [terminate?]]
