@@ -145,10 +145,11 @@
   (is (= 2 (let [a (atom 0)]
              (exec (parallel :sequence
                              (sequence (action (swap! a inc))
+                                       (action (Thread/sleep 250) true)
                                        (action false))
 
                              (sequence (action (swap! a inc))
-                                       (action (Thread/sleep 250) true)
+                                       (action (Thread/sleep 1000) true)
                                        (action (swap! a inc)))))
              @a)))
 
