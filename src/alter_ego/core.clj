@@ -211,7 +211,7 @@
         (if (= policy :sequence)
           (try
             (loop []
-              (Thread/sleep 50)
+              (Thread/yield)
               (cond (all-succeded? fs) true
                     (some-failed? fs)  (cancel fs self-terminate? false)
                     (not (exec-action? parent-terminate?)) (cancel fs self-terminate? false)
@@ -222,7 +222,7 @@
 
           (try
             (loop []
-              (Thread/sleep 50)
+              (Thread/yield)
               (cond (all-failed? fs) false
                     (some-succeded? fs) (cancel fs self-terminate? true)
                     (not (exec-action? parent-terminate?)) (cancel fs self-terminate? false)
@@ -313,7 +313,7 @@
           watch (future (exec watch terminate-watch?))]
 
       (loop []
-        (Thread/sleep 50)
+        (Thread/yield)
         (cond (future-done? children) (do (terminate terminate-watch?)
                                           (try @children (catch Exception e (throw e)))
                                           (deref watch)
@@ -344,7 +344,7 @@
     (future (try
               (exec (interrupter
                      (until-success
-                      (action (Thread/sleep 50)
+                      (action (Thread/yield)
                               (deref stop?)))
                      (selector (sequence behaviour
                                          (action (swap! done? not)))
@@ -359,7 +359,7 @@
     
     (while (and (not (read-line))
                 (not @done?))
-      (Thread/sleep 20))
+      (Thread/yield))
     
     (swap! stop? not)
     
