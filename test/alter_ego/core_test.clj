@@ -9,6 +9,25 @@
     (is (= true (exec (action (swap! board inc)))))))
 
 (deftest throttled-action-test
+  (let [now (System/currentTimeMillis)
+        last-run (atom now)]
+    (throttle? last-run 250 (atom false))
+    (is (>= (- (System/currentTimeMillis) now) 200)))
+
+  (let [now (System/currentTimeMillis)
+        last-run (atom now)]
+    (throttle? last-run 1000000 (atom true))
+    (is (<= (- (System/currentTimeMillis) now) 200)))
+
+  (let [last-run (atom (System/currentTimeMillis))]
+    (Thread/sleep 500)
+    (throttle? last-run 250 (atom false))
+    (let [now (System/currentTimeMillis)]
+      (is (<= (- (System/currentTimeMillis) now) 100))))
+
+  (let [action (throttled-action 100 :second true)]
+    (is (= 10 (:rate-ms action))))
+  
   (let [board (atom 0)
         inc-action (throttled-action 1 :second (swap! board inc))
         now (System/currentTimeMillis)]

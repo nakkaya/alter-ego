@@ -81,34 +81,7 @@
   (let [[doc _ body] (parse-children body :action)]
     {:type :action :trace `(quote (action ~@body)) :doc doc :id '(gensym "N_") :action `(fn [] ~@body)}))
 
-(def ^{:private true} unit->ms
-  {:microsecond 0.001 :millisecond 1
-   :second 1000 :minute 60000
-   :hour 3600000 :day 86400000
-   :month 2678400000})
-
-(defn throttler [f rate unit]
-  (let [rate-ms (/ (unit->ms unit) rate)
-        ;;rate-ms (/ rate (unit->ms unit))
-        t-last-run (atom (System/currentTimeMillis))
-        throttled-fn (fn [f]
-                       (fn [& args]
-                         (let [elapsed (- (System/currentTimeMillis) @t-last-run)
-                               left-to-wait (- rate-ms elapsed)]
-                           (when (pos? left-to-wait)
-                             (Thread/sleep left-to-wait)))
-                         (let [ret (apply f args)]
-                           (reset! t-last-run (System/currentTimeMillis))
-                           ret)))]
-    (throttled-fn f)))
-
-(defmacro throttled-action [rate unit & body]
-  (let [[doc _ body] (parse-children body :action)]
-    {:type :action :trace `(quote (throttled-action ~@body))
-     :doc doc :id '(gensym "N_") :action `(throttler (fn [] ~@body) ~rate ~unit)}))
-
-(defmethod exec :action
-  [{action :action trace :trace} & [terminate?]]
+(defn exec-action [action terminate? trace]
   (try
     (if (exec-action? terminate?)
       (boolean (action))
@@ -119,6 +92,40 @@
          (str (root-cause e) "\n"
               (write trace :dispatch code-dispatch :stream nil))))
       (throw e))))
+
+(defmethod exec :action
+  [{action :action trace :trace} & [terminate?]]
+  (exec-action action terminate? trace))
+
+(def ^{:private true} unit->ms
+  {:microsecond 0.001 :millisecond 1
+   :second 1000 :minute 60000
+   :hour 3600000 :day 86400000
+   :month 2678400000})
+
+(defn throttle? [t-last-run rate-ms terminate?]
+  (let [now          (System/currentTimeMillis)
+        elapsed      (- now @t-last-run)
+        left-to-wait (- rate-ms elapsed)]
+    (if (and (>= left-to-wait 0)
+             (exec-action? terminate?))
+      (do (Thread/sleep alter-ego-pool-freq)
+          (recur t-last-run rate-ms terminate?))
+      (reset! t-last-run now))))
+
+(defmacro throttled-action [rate unit & body]
+  (let [[doc _ body] (parse-children body :action)]
+    {:type :throttled-action :trace `(quote (throttled-action ~@body))
+     :doc doc :id '(gensym "N_")
+     :last-run  `(atom (System/currentTimeMillis))
+     :rate-ms   (/ (unit->ms unit) rate)
+     :action    `(fn [] ~@body)}))
+
+(defmethod exec :throttled-action
+  [{action :action trace :trace
+    last-run :last-run rate-ms :rate-ms} & [terminate?]]
+  (throttle? last-run rate-ms terminate?)
+  (exec-action action terminate? trace))
 
 ;;
 ;; Selectors
